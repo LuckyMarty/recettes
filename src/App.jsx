@@ -37,10 +37,19 @@ export default function App() {
       filename: `${recipe.title.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       // useCORS helps if images are loaded from remote URLs; data-URLs work without CORS.
-      html2canvas: { scale: 2, useCORS: true },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
     }
-    html2pdf().set(opt).from(element).save()
+    // Apply temporary class so the preview uses print styling during PDF render
+    element.classList.add('print-mode')
+    const job = html2pdf().set(opt).from(element).save()
+    // remove the class after generation (both success and error)
+    if (job && job.then) {
+      job.then(() => element.classList.remove('print-mode')).catch(() => element.classList.remove('print-mode'))
+    } else {
+      // fallback: remove after a delay
+      setTimeout(() => element.classList.remove('print-mode'), 800)
+    }
   }
 
   const themes = {

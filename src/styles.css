@@ -163,11 +163,19 @@ body{
   opacity:1;
   font-size: 16px;
 }
-.editor .row{display:flex;gap:16px}
-.editor .row label{flex:1}
+.editor .row{
+  /* Desktop: arrange short meta fields in a 2-column grid (2x2 when there are 3-4 items)
+     Using minmax keeps small boxes readable while allowing expansion. */
+  display: grid;
+  grid-template-columns: repeat(2, minmax(140px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.editor .row label{display:block}
 .editor section{
-  margin-top:32px;
-  padding-top: 32px;
+  /* larger gaps between editor sections for improved readability */
+  margin-top:40px;
+  padding-top: 36px;
   border-top: 2px solid var(--border);
 }
 .editor section:first-of-type{
@@ -206,6 +214,7 @@ body{
   color:var(--muted);
   margin-top:8px;
   font-size: 18px;
+  white-space: pre-wrap; /* preserve line breaks entered by the user */
 }
 .meta{
   display:flex;
@@ -231,10 +240,10 @@ body{
 }
 .recipe-card h3{
   border-bottom:2px solid var(--border);
-  padding-bottom:10px;
+  padding-bottom:12px;
   font-size: 24px;
   color: var(--accent);
-  margin-top: 32px;
+  margin-top: 40px; /* larger gap between preview sections */
   font-weight: 700;
 }
 .recipe-card ul{padding-left:24px}
@@ -432,22 +441,28 @@ kbd{
   color: var(--accent);
 }
 .row label{display:flex;align-items:center;gap:10px}
-.row label input{flex:1}
+.row label input{flex:1; background: white; color: var(--text-dark); border:2px solid var(--border); padding:10px 12px; border-radius:8px; font-size:16px}
+.row label input:focus{border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-light); outline:none}
 
 /* Ingredients table styles */
 .ingredients-table{
   width:100%;
   border-collapse:collapse;
-  margin-top:16px;
+  margin-top:8px; /* reduced gap */
 }
 .ingredients-table td{
   vertical-align:top;
-  padding:14px 10px;
-  border-bottom:2px solid var(--border);
-  font-size: 17px;
-  line-height: 1.6;
+  padding:8px 6px; /* smaller padding for compactness */
+  border-bottom:1px solid var(--border);
+  font-size: 15px;
+  line-height: 1.4;
 }
 .ing-desc{padding-left:0}
+
+/* Remove bottom border on the last row so tables don't show a trailing line */
+.ingredients-table tr:last-child td{border-bottom: none}
+/* Also remove bottom border for the steps table last row */
+.steps-table tr:last-child td{border-bottom: none}
 
 @media print{
   .ingredients-table td{border-bottom:2px solid #ddd}
@@ -457,27 +472,27 @@ kbd{
 .steps-table{
   width:100%;
   border-collapse:collapse;
-  margin-top:16px;
+  margin-top:8px; /* reduced gap */
 }
 .steps-table .step-row + .step-row .step-desc{border-top:0}
 .steps-table td{
   vertical-align:top;
-  padding:16px 12px;
-  border-bottom:2px solid var(--border);
-  font-size: 17px;
-  line-height: 1.6;
+  padding:8px 8px; /* smaller padding */
+  border-bottom:1px solid var(--border);
+  font-size: 15px;
+  line-height: 1.4;
 }
 .step-num{
-  width:56px;
+  width:48px;
   text-align:center;
   font-weight:700;
   color: var(--accent);
   background: var(--accent-light);
-  border-right:2px solid var(--border);
-  border-radius:8px;
-  font-size: 20px;
+  border-right:1px solid var(--border);
+  border-radius:6px;
+  font-size: 16px;
 }
-.step-desc{padding-left:16px}
+.step-desc{padding-left:12px}
 
 /* Preserve user-entered line breaks inside preview cells */
 .step-desc, .ing-desc { white-space: pre-wrap; }
@@ -487,16 +502,54 @@ kbd{
   .step-num{background: var(--accent-light);color: var(--text-dark)}
 }
 
+/* Print: also remove the last-row border so the card edge is clean */
+@media print{
+  .ingredients-table tr:last-child td,
+  .steps-table tr:last-child td{border-bottom: none !important}
+}
+
 /* Print styles */
 @media print{
   body *{visibility:visible}
-  body{background: white !important;}
+  /* Force white background for printing */
+  body{background: white !important; color: #000 !important}
   .left, .app-header, .buttons{display:none}
-  .right{width:100%; background: white !important;}
-  .preview-wrapper{background: white !important;}
-  .recipe-card{border:none;box-shadow:none;margin:0;padding:0;background:white !important;}
-  .meta-item{background: white !important; border: 1px solid #ddd;}
-  .step-num{background: white !important;}
+  .right{width:100%; background: white !important}
+  .preview-wrapper{background: white !important}
+
+  /* Recipe card simplified for print */
+  /* Keep a safe inner padding so the title stays at the top and the absolute-positioned
+    image can be placed at the top-right. Removing padding broke the header layout. */
+  .recipe-card{border:none;box-shadow:none;margin:0;padding:32px;background:white !important;position:relative}
+  /* Remove shadows from other UI pieces for a flat print */
+  .app-header, .btn, .help-panel, .recipe-image, .thumb, .list-row, .tag-chip { box-shadow: none !important; -webkit-box-shadow: none !important; filter: none !important; }
+  .btn, .tag-chip { background: white !important; border-color: #ddd !important }
+  .recipe-card, .preview-wrapper { font-size: 12px !important; }
+  .recipe-card header h2 { font-size: 18px !important; }
+  .recipe-card h3 { font-size: 14px !important; }
+  .meta-item strong, .ingredients-table td, .steps-table td { font-size: 12px !important; }
+
+  /* Make meta and numbered column more neutral for printing */
+  .meta-item{background: white !important; border: 1px solid #ddd}
+  .step-num{background: white !important}
+}
+
+/* Ensure the recipe image is absolutely positioned at top-right for print/PDF
+   and the header reserves space for it. This overrides any mobile-style rules. */
+@media print{
+  .recipe-image{position:absolute !important; top:32px !important; right:32px !important; width:140px !important; height:140px !important; float:none !important; display:block !important}
+  .recipe-card.has-image header{padding-right:180px !important}
+}
+
+/* Aggressive removal of shadows/filters for all printed elements inside preview to handle any
+   remaining browser/html2canvas artifacts (covers pseudo-elements too). */
+@media print{
+  .preview-wrapper, .preview-wrapper * , .preview-wrapper *::before, .preview-wrapper *::after {
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+  }
 }
 
 /* Make the browser try to not add default page margins (browsers may still add headers/footers).
@@ -514,3 +567,91 @@ kbd{
 }
 
 .print-help { font-size:15px; color:var(--muted); margin-top:12px }
+
+/* Mirror print styles when generating PDF via html2pdf: apply by adding .print-mode to the preview wrapper */
+.preview-wrapper.print-mode{background: white !important}
+.preview-wrapper.print-mode .recipe-card{border:none;box-shadow:none;margin:0;padding:0;background:white !important;font-size:12px}
+.preview-wrapper.print-mode .recipe-card header h2{font-size:18px}
+.preview-wrapper.print-mode .recipe-card h3{font-size:14px}
+.preview-wrapper.print-mode .meta-item strong,
+.preview-wrapper.print-mode .ingredients-table td,
+.preview-wrapper.print-mode .steps-table td{font-size:12px}
+.preview-wrapper.print-mode .meta-item{background: white !important; border: 1px solid #ddd}
+.preview-wrapper.print-mode .step-num{background: white !important}
+/* Remove shadows and heavy UI styles when generating PDF (print-mode) */
+.preview-wrapper.print-mode .app-header,
+.preview-wrapper.print-mode .btn,
+.preview-wrapper.print-mode .help-panel,
+.preview-wrapper.print-mode .recipe-image,
+.preview-wrapper.print-mode .thumb,
+.preview-wrapper.print-mode .list-row,
+.preview-wrapper.print-mode .tag-chip {
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  filter: none !important;
+}
+.preview-wrapper.print-mode .btn,
+.preview-wrapper.print-mode .tag-chip {
+  background: white !important;
+  border-color: #ddd !important;
+  color: #000 !important;
+}
+
+/* Aggressive removal for print-mode as well to catch pseudo-elements */
+.preview-wrapper.print-mode, .preview-wrapper.print-mode * , .preview-wrapper.print-mode *::before, .preview-wrapper.print-mode *::after {
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
+
+/* Mobile / small screens: stack editor and preview, larger tap targets, full-width controls */
+@media (max-width: 900px) {
+  :root{ --gap: 12px }
+  .app-header{padding:14px}
+  .app-header h1{font-size:20px}
+  .theme-picker{display:none} /* hide theme selector to simplify UI on phones */
+
+  .split{flex-direction:column;height:auto}
+  .left, .right{padding:16px;height:auto}
+  .left{border-right:none}
+
+  /* Buttons become stacked and full width for easier tapping */
+  .buttons{flex-direction:column;align-items:stretch;gap:10px}
+  .buttons .btn{width:100%;justify-content:center}
+
+  /* Make editor controls larger and easier to tap */
+  .editor label{font-size:18px}
+  .editor input,.editor textarea{font-size:18px;padding:12px}
+
+  /* Make the short meta row (Personnes / Préparation / Cuisson) stack on small screens */
+  .editor .row{grid-template-columns: 1fr}
+  .row label{display:block; width:100%}
+  .row label .field-icon{display:inline-block;margin-bottom:6px}
+  .row label input{width:100%}
+
+  /* Tag chips adapt to smaller screens */
+  .tags-row, .tags-list{gap:10px}
+  .tag-chip{padding:8px 12px;font-size:15px}
+
+  /* Preview card becomes full width and vertical spacing reduced */
+  .preview-wrapper{padding:12px}
+  .recipe-card{padding:20px;border-radius:12px}
+  .recipe-card header h2{font-size:22px}
+  .recipe-card h3{font-size:18px}
+
+  /* Make recipe image responsive: move to top, center, smaller footprint */
+  .recipe-image{position:static;display:block;margin:0 auto 12px auto;float:none;width:120px;height:120px}
+  .recipe-card.has-image header{padding-right:0}
+
+  /* Compact tables for mobile */
+  .ingredients-table td, .steps-table td{padding:8px 6px;font-size:15px}
+
+  /* Make move buttons larger and more tappable */
+  .move-btn{width:56px;height:56px;font-size:24px}
+
+  /* Reduce preview shadow a bit on small screens */
+  .recipe-card{box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+}
+
