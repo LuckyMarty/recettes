@@ -1,44 +1,502 @@
 :root{
-  --gap: 16px;
-  --accent: #c94c4c;
+  --gap: 20px;
+  --accent: #e67e50;
+  --accent-light: #fef3ed;
   --muted: #666;
+  --bg-warm: #faf8f5;
+  --border: #e5dfd7;
+  --text-dark: #2c2416;
 }
 *{box-sizing:border-box}
-body{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial; margin:0; color:#222}
-.app-header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid #eee}
-.app-header h1{font-size:18px;margin:0}
-.app-header .buttons button{margin-left:8px}
+body{
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin:0;
+  color: var(--text-dark);
+  background: var(--bg-warm);
+  font-size: 16px;
+  line-height: 1.6;
+}
 
-.split{display:flex;height:calc(100vh - 68px)}
+.app-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:20px 24px;
+  background: white;
+  border-bottom:2px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.app-header h1{
+  font-size:26px;
+  margin:0;
+  color: var(--accent);
+  font-weight: 700;
+}
+.app-header .buttons button{margin-left:12px}
+
+/* Theme picker styling */
+.theme-picker{
+  display: flex;
+  align-items: center;
+  margin-right: 12px;
+}
+.theme-select{
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.theme-select:focus{
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+.theme-select:hover{
+  border-color: var(--accent);
+}
+
+/* Button system - GROS boutons clairs et simples */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content: center;
+  gap:10px;
+  padding:14px 24px;
+  border-radius:12px;
+  border:2px solid var(--border);
+  background:#fff;
+  color: var(--text-dark);
+  font-size:17px;
+  font-weight: 600;
+  cursor:pointer;
+  min-height:52px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+.btn svg{display:block}
+.btn:focus{
+  outline:3px solid var(--accent);
+  outline-offset:3px;
+}
+.btn:hover{
+  background: var(--accent-light);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.btn:active{
+  transform: translateY(0);
+}
+.btn[disabled]{
+  opacity:0.4;
+  cursor:not-allowed;
+  transform: none !important;
+}
+.btn-primary{
+  background: var(--accent);
+  color:#fff;
+  border-color: var(--accent);
+}
+.btn-primary:hover{
+  background: #d96d40;
+  border-color: #d96d40;
+}
+.btn-ghost{
+  background:transparent;
+  border-color:transparent;
+  box-shadow: none;
+}
+.btn-icon{
+  width:48px;
+  min-width:48px;
+  height:48px;
+  padding:10px;
+  border-radius:10px;
+  font-size: 20px;
+}
+.buttons{display:flex;gap:12px;align-items:center}
+
+/* Smaller buttons used inline */
+.btn.small{
+  padding:10px 16px;
+  font-size:15px;
+  min-height:42px;
+  border-radius:10px;
+}
+
+/* Make file input and add buttons more prominent */
+.image-controls input[type="file"]{margin-bottom:12px; font-size: 16px;}
+.editor button.btn-primary{margin-top:12px}
+
+.split{display:flex;height:calc(100vh - 88px)}
 .left,.right{flex:1;overflow:auto;padding:var(--gap)}
-.left{background:#fafafa;border-right:1px solid #eee}
+.left{background: white; border-right:3px solid var(--border)}
 
-.editor label{display:block;margin-bottom:8px}
-.editor input,.editor textarea{width:100%;padding:8px;border:1px solid #ddd;border-radius:4px}
-.editor .row{display:flex;gap:12px}
+.editor label{
+  display:block;
+  margin-bottom:20px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+.editor input,.editor textarea{
+  width:100%;
+  padding:14px 16px;
+  border:2px solid var(--border);
+  border-radius:10px;
+  font-size: 17px;
+  margin-top: 8px;
+  transition: all 0.2s ease;
+  background: white;
+}
+.editor input:focus,.editor textarea:focus{
+  border-color:var(--accent);
+  outline:none;
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+.editor input::placeholder,.editor textarea::placeholder{
+  color:#999;
+  opacity:1;
+  font-size: 16px;
+}
+.editor .row{display:flex;gap:16px}
 .editor .row label{flex:1}
-.editor section{margin-top:12px}
-.list-row{display:flex;gap:8px;margin-bottom:8px}
+.editor section{
+  margin-top:32px;
+  padding-top: 32px;
+  border-top: 2px solid var(--border);
+}
+.editor section:first-of-type{
+  border-top: none;
+  padding-top: 0;
+}
+.editor h3, .editor h4{
+  font-size: 22px;
+  color: var(--accent);
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+.list-row{display:flex;gap:12px;margin-bottom:16px;align-items:center}
 .list-row input{flex:1}
-.list-row textarea{flex:1;min-height:56px}
-.list-row button{background:#eee;border:1px solid #ddd;padding:6px 10px;border-radius:6px}
+.list-row textarea{flex:1;min-height:60px}
+.list-row button{background:#eee;border:2px solid #ddd;padding:8px 14px;border-radius:8px}
 
-.preview-wrapper{padding:18px}
-.recipe-card{max-width:720px;margin:0 auto;background:white;padding:18px;border:1px solid #eee;border-radius:6px}
-.recipe-card header h2{margin:0}
-.subtitle{color:var(--muted);margin-top:6px}
-.meta{display:flex;gap:12px;color:var(--muted);font-size:14px;margin-top:12px}
-.recipe-card h3{border-bottom:1px dashed #eee;padding-bottom:6px}
-.recipe-card ul{padding-left:20px}
-.recipe-card ol{padding-left:20px}
-.print-note{margin-top:18px;color:var(--muted);font-size:12px}
+.preview-wrapper{padding:24px;background: var(--bg-warm)}
+.recipe-card{
+  max-width:720px;
+  margin:0 auto;
+  background:white;
+  padding:32px;
+  border:3px solid var(--border);
+  border-radius:16px;
+  position:relative;
+  box-shadow:0 8px 24px rgba(0,0,0,0.08);
+}
+.recipe-card header h2{
+  margin:0;
+  font-size: 32px;
+  color: var(--accent);
+  font-weight: 700;
+}
+.subtitle{
+  color:var(--muted);
+  margin-top:8px;
+  font-size: 18px;
+}
+.meta{
+  display:flex;
+  gap:20px;
+  color:var(--muted);
+  font-size:16px;
+  margin-top:20px;
+  flex-wrap: wrap;
+}
+.meta-item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background: var(--accent-light);
+  padding: 8px 14px;
+  border-radius: 8px;
+}
+.meta-item strong{
+  margin-left:4px;
+  color: var(--text-dark);
+  font-weight:700;
+  font-size: 17px;
+}
+.recipe-card h3{
+  border-bottom:2px solid var(--border);
+  padding-bottom:10px;
+  font-size: 24px;
+  color: var(--accent);
+  margin-top: 32px;
+  font-weight: 700;
+}
+.recipe-card ul{padding-left:24px}
+.recipe-card ol{padding-left:24px}
+.print-note{
+  margin-top:24px;
+  color:var(--muted);
+  font-size:14px;
+  text-align: center;
+}
+
+.recipe-image{
+  position:absolute;
+  top:32px;
+  right:32px;
+  width:140px;
+  height:140px;
+  object-fit:contain;
+  border:3px solid var(--border);
+  border-radius:12px;
+  background:#fff;
+  padding:8px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+.recipe-card.has-image header{padding-right:180px}
+.image-wrap{overflow:hidden}
+.thumb{
+  width:110px;
+  height:80px;
+  object-fit:cover;
+  border-radius:10px;
+  border:2px solid var(--border);
+  margin-right:12px;
+}
+.image-preview-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:12px;
+}
+.image-controls input[type="file"]{display:block}
+
+/* Tags UI - Plus gros et plus visibles */
+.tags-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+.tag-add-row{display:flex;gap:12px;margin-top:12px}
+.tags-list{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+.tag-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 16px;
+  border-radius:20px;
+  background: var(--accent-light);
+  border:2px solid var(--border);
+  font-size:16px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+.tag-chip.preview{
+  background: var(--accent-light);
+  border:2px solid var(--accent);
+}
+.icon-btn{
+  background:transparent;
+  border:0;
+  padding:0 8px;
+  cursor:pointer;
+  font-size: 18px;
+  color: var(--accent);
+  font-weight: bold;
+}
+
+/* Tag drag styles - Simplifié */
+.tag-chip{transition:all 0.2s ease;cursor:default}
+.tag-chip[draggable]{cursor:grab}
+.tag-chip[draggable]:active{cursor:grabbing}
+.tag-chip.drag-over{outline:3px dashed var(--accent);background:#fff}
+.tag-chip.dragging{opacity:0.6;transform:scale(0.95)}
+
+/* Preview tags layout: ensure horizontal gap between chips */
+.preview-tags{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+
+/* Help panel and muted text - Plus lisible */
+.help-panel{
+  background: var(--accent-light);
+  border:3px solid var(--accent);
+  padding:20px;
+  border-radius:12px;
+  margin-bottom:20px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+.help-panel strong{
+  display:block;
+  margin-bottom:10px;
+  font-size: 19px;
+  color: var(--accent);
+}
+.help-panel ul{margin:12px 0;padding-left:24px;font-size: 16px;}
+.help-panel li{margin-bottom:10px;line-height: 1.6;}
+.muted-text{
+  color:var(--muted);
+  font-size:15px;
+  line-height: 1.5;
+  margin-top: 8px;
+}
+kbd{
+  background:#fff;
+  border:2px solid var(--border);
+  border-radius:6px;
+  padding:4px 8px;
+  font-size:14px;
+  font-family:monospace;
+  font-weight: 600;
+}
+
+/* Improve preview visual separation */
+.preview-wrapper{padding:24px}
+.recipe-card{max-width:720px;margin:0 auto;background:white;padding:32px;border:3px solid var(--border);border-radius:16px;position:relative;box-shadow:0 8px 24px rgba(0,0,0,0.08)}
+
+/* Small tooltip-like hint for drag handle */
+.drag-hint{font-size:14px;color:var(--muted);margin-left:8px}
+
+/* Drag-and-drop visual helpers - SIMPLIFIÉ, masquer la poignée drag */
+.list-row{transition:all 0.2s ease;align-items:center}
+.list-row.dragging{opacity:0.6}
+.list-row.drag-over{outline:3px dashed var(--accent);background: var(--accent-light)}
+.list-row[draggable]{cursor:default}
+.list-row[draggable]:active{cursor:default}
+
+/* MASQUER le drag handle - trop compliqué pour débutant */
+.drag-handle{
+  display:none !important;
+}
+
+.step-controls{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  margin-right:8px;
+  gap:8px;
+}
+
+/* Boutons de déplacement - GROS et CLAIRS */
+.move-btn{
+  width:48px;
+  height:48px;
+  padding:0;
+  border:2px solid var(--border);
+  background: var(--accent-light);
+  border-radius:10px;
+  margin:0;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size: 22px;
+  font-weight: bold;
+  color: var(--accent);
+  transition: all 0.2s ease;
+}
+.move-btn:hover{
+  background: var(--accent);
+  color: white;
+  transform: scale(1.05);
+}
+.move-btn[disabled]{
+  opacity:0.3;
+  cursor:not-allowed;
+  transform: none !important;
+}
+
+/* make layout of row accommodate the controls and vertically center them */
+.list-row{display:flex;gap:12px;align-items:center;margin-bottom:16px}
+.list-row textarea{flex:1}
+
+/* auto-resize helper for inputs/textareas so they grow with content */
+.auto-resize{
+  overflow:hidden;
+  resize:none;
+  min-height:60px;
+  padding:14px 16px;
+  border:2px solid var(--border);
+  border-radius:10px;
+  font-size: 17px;
+  line-height: 1.5;
+}
+.ingredient-input{min-height:60px}
+
+/* small icon shown next to short fields like servings/prep/cook */
+.field-icon{
+  width:20px;
+  height:20px;
+  vertical-align:middle;
+  margin-right:8px;
+  color: var(--accent);
+}
+.row label{display:flex;align-items:center;gap:10px}
+.row label input{flex:1}
+
+/* Ingredients table styles */
+.ingredients-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:16px;
+}
+.ingredients-table td{
+  vertical-align:top;
+  padding:14px 10px;
+  border-bottom:2px solid var(--border);
+  font-size: 17px;
+  line-height: 1.6;
+}
+.ing-desc{padding-left:0}
+
+@media print{
+  .ingredients-table td{border-bottom:2px solid #ddd}
+}
+
+/* Steps table styles */
+.steps-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:16px;
+}
+.steps-table .step-row + .step-row .step-desc{border-top:0}
+.steps-table td{
+  vertical-align:top;
+  padding:16px 12px;
+  border-bottom:2px solid var(--border);
+  font-size: 17px;
+  line-height: 1.6;
+}
+.step-num{
+  width:56px;
+  text-align:center;
+  font-weight:700;
+  color: var(--accent);
+  background: var(--accent-light);
+  border-right:2px solid var(--border);
+  border-radius:8px;
+  font-size: 20px;
+}
+.step-desc{padding-left:16px}
+
+/* Preserve user-entered line breaks inside preview cells */
+.step-desc, .ing-desc { white-space: pre-wrap; }
+
+@media print{
+  .steps-table td{border-bottom:2px solid #ccc}
+  .step-num{background: var(--accent-light);color: var(--text-dark)}
+}
 
 /* Print styles */
 @media print{
   body *{visibility:visible}
+  body{background: white !important;}
   .left, .app-header, .buttons{display:none}
-  .right{width:100%;}
-  .recipe-card{border:none;box-shadow:none;margin:0;padding:0}
+  .right{width:100%; background: white !important;}
+  .preview-wrapper{background: white !important;}
+  .recipe-card{border:none;box-shadow:none;margin:0;padding:0;background:white !important;}
+  .meta-item{background: white !important; border: 1px solid #ddd;}
+  .step-num{background: white !important;}
 }
 
 /* Make the browser try to not add default page margins (browsers may still add headers/footers).
@@ -55,4 +513,4 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;
   .print-help { display: none; }
 }
 
-.print-help { font-size:13px; color:var(--muted); margin-top:8px }
+.print-help { font-size:15px; color:var(--muted); margin-top:12px }
