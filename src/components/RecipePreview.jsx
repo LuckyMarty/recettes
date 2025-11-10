@@ -42,6 +42,12 @@ export default function RecipePreview({ recipe }) {
             <strong>{recipe.cookTime}</strong>
           </div>
         </div>
+        {(recipe.createdAt || recipe.updatedAt) && (
+          <div className="preview-dates" style={{marginTop: 12, fontSize: '13px', color: 'var(--text-muted)'}}>
+            {recipe.createdAt && <div>📅 Créée le {new Date(recipe.createdAt).toLocaleDateString('fr-FR')}</div>}
+            {recipe.updatedAt && recipe.updatedAt !== recipe.createdAt && <div>🔄 Modifiée le {new Date(recipe.updatedAt).toLocaleDateString('fr-FR')}</div>}
+          </div>
+        )}
       </header>
 
       <section>

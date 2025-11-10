@@ -8,7 +8,7 @@ export default function SearchBar({ value, onChange, placeholder = 'Rechercher d
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        style={{padding:'8px 12px', minWidth:220}}
+        style={{padding:'8px 12px', minWidth:320}}
       />
     </div>
   )

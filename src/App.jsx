@@ -30,31 +30,121 @@ export default function App() {
     ingredients: ['200 g de farine', '2 oeufs'],
     steps: ['Mélanger les ingrédients', 'Cuire 30 minutes'],
     image: null, // data URL or null
-    tags: []
+    tags: [],
+    createdAt: null,
+    updatedAt: null
   })
 
   const previewRef = useRef()
   const [searchResults, setSearchResults] = useState([])
   useEffect(() => {
-    // load saved users from localStorage
-    try {
-      const raw = localStorage.getItem('recettes_users')
-      const parsed = raw ? JSON.parse(raw) : []
-      setUsers(parsed)
-      const curId = localStorage.getItem('recettes_current')
-      if (curId) {
-        const u = parsed.find((x) => String(x.id) === String(curId))
-        if (u) setCurrentUser(u)
-      }
-    } catch (err) {
-      console.warn('Failed to load users', err)
+    // Check if user is logged in (stored in localStorage for session persistence)
+    const curId = localStorage.getItem('recettes_current')
+    if (curId) {
+      // In a real app, you'd validate the token/session here
+      // For now, we'll just store the user ID
+      setCurrentUser({ id: parseInt(curId) })
     }
   }, [])
 
-  // when app loads and we found a current user, show their collection first
+  // Load recipes when user logs in
   useEffect(() => {
-    if (currentUser) setShowProfile(true)
+    if (currentUser) {
+      loadUserRecipes()
+      setShowProfile(true)
+    } else {
+      setSearchResults([])
+      setShowProfile(false)
+    }
   }, [currentUser])
+
+  // API functions
+  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3002/api'
+
+  async function loadUserRecipes() {
+    try {
+      const response = await fetch(`${API_BASE}/users/${currentUser.id}/recipes`)
+      if (response.ok) {
+        const recipes = await response.json()
+        setUsers([{ ...currentUser, recipes }])
+        setSearchResults(recipes)
+      }
+    } catch (error) {
+      console.error('Failed to load recipes:', error)
+    }
+  }
+
+  async function apiLogin(email, password) {
+    const response = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Login failed')
+    }
+
+    return data
+  }
+
+  async function apiRegister(name, email, password) {
+    const response = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password })
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Registration failed')
+    }
+
+    return data
+  }
+
+  async function apiCreateRecipe(recipe) {
+    const response = await fetch(`${API_BASE}/recipes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(recipe)
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to create recipe')
+    }
+
+    return response.json()
+  }
+
+  async function apiUpdateRecipe(id, recipe) {
+    const response = await fetch(`${API_BASE}/recipes/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(recipe)
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to update recipe')
+    }
+
+    return response.json()
+  }
+
+  async function apiDeleteRecipe(id) {
+    const response = await fetch(`${API_BASE}/recipes/${id}`, {
+      method: 'DELETE'
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to delete recipe')
+    }
+
+    return response.json()
+  }
 
   // run search when query changes
   useEffect(() => {
@@ -81,34 +171,36 @@ export default function App() {
   }
 
   function persistUsers(next) {
+    // No longer needed with API - users are stored in database
     setUsers(next)
-    try { localStorage.setItem('recettes_users', JSON.stringify(next)) } catch (e) {}
   }
 
   function handleLogin({ email, password }) {
-    const u = users.find((x) => x.email === email && x.password === password)
-    if (!u) {
-      alert('Utilisateur introuvable ou mot de passe incorrect')
-      return
-    }
-    setCurrentUser(u)
-    localStorage.setItem('recettes_current', String(u.id))
-    setShowAuth(false)
-    setShowProfile(true)
+    apiLogin(email, password)
+      .then(user => {
+        setCurrentUser(user)
+        localStorage.setItem('recettes_current', String(user.id))
+        setShowAuth(false)
+        setShowProfile(true)
+      })
+      .catch(error => {
+        alert(`Erreur de connexion: ${error.message}`)
+        console.error('Login error:', error)
+      })
   }
 
   function handleSignup({ name, email, password }) {
-    if (users.find((x) => x.email === email)) {
-      alert('Un compte existe déjà pour cet email')
-      return
-    }
-    const u = { id: Date.now(), name, email, password, recipes: [], folders: {} }
-    const next = [...users, u]
-    persistUsers(next)
-    setCurrentUser(u)
-    localStorage.setItem('recettes_current', String(u.id))
-    setShowAuth(false)
-    setShowProfile(true)
+    apiRegister(name, email, password)
+      .then(user => {
+        setCurrentUser(user)
+        localStorage.setItem('recettes_current', String(user.id))
+        setShowAuth(false)
+        setShowProfile(true)
+      })
+      .catch(error => {
+        alert(`Erreur d'inscription: ${error.message}`)
+        console.error('Signup error:', error)
+      })
   }
 
   function handleLogout() {
@@ -117,37 +209,67 @@ export default function App() {
   }
 
   function saveCurrentRecipe() {
-    if (!currentUser) { setShowAuth(true); return }
-    const recipes = currentUser.recipes || []
-    const r = { ...recipe }
-    if (r.id) {
-      const nextRecipes = recipes.map((x) => x.id === r.id ? r : x)
-      const updated = { ...currentUser, recipes: nextRecipes }
-      const nextUsers = users.map((u) => u.id === currentUser.id ? updated : u)
-      persistUsers(nextUsers)
-      setCurrentUser(updated)
-      alert('Recette mise à jour')
+    if (!currentUser || !recipe.title.trim()) return
+
+    const recipeToSave = {
+      ...recipe,
+      user_id: currentUser.id,
+      updated_at: new Date().toISOString()
+    }
+
+    if (recipe.id) {
+      // Update existing recipe
+      apiUpdateRecipe(recipe.id, recipeToSave)
+        .then(() => {
+          loadUserRecipes() // Reload recipes
+        })
+        .catch(error => {
+          console.error('Failed to update recipe:', error)
+          alert('Erreur lors de la sauvegarde')
+        })
     } else {
-      r.id = Date.now()
-      const nextRecipes = [...recipes, r]
-      const updated = { ...currentUser, recipes: nextRecipes }
-      const nextUsers = users.map((u) => u.id === currentUser.id ? updated : u)
-      persistUsers(nextUsers)
-      setCurrentUser(updated)
-      alert('Recette enregistrée')
+      // Create new recipe
+      recipeToSave.created_at = new Date().toISOString()
+      apiCreateRecipe(recipeToSave)
+        .then(result => {
+          setRecipe({ ...recipe, id: result.id })
+          loadUserRecipes() // Reload recipes
+        })
+        .catch(error => {
+          console.error('Failed to create recipe:', error)
+          alert('Erreur lors de la sauvegarde')
+        })
     }
   }
 
   function deleteRecipe(id) {
     if (!currentUser) return
     if (!confirm('Supprimer cette recette ?')) return
-    const nextRecipes = (currentUser.recipes || []).filter((r) => r.id !== id)
-    const updated = { ...currentUser, recipes: nextRecipes }
-    const nextUsers = users.map((u) => u.id === currentUser.id ? updated : u)
-    persistUsers(nextUsers)
-    setCurrentUser(updated)
-    // if the currently loaded recipe was deleted, clear editor
-    if (recipe.id === id) setRecipe({ title: '', subtitle: '', servings: '', prepTime: '', cookTime: '', ingredients: [], steps: [], image: null, tags: [] })
+
+    apiDeleteRecipe(id)
+      .then(() => {
+        loadUserRecipes() // Reload recipes
+        // Clear editor if the deleted recipe was currently loaded
+        if (recipe.id === id) {
+          setRecipe({
+            title: 'Ma recette',
+            subtitle: 'Une délicieuse recette à partager',
+            servings: '2',
+            prepTime: '15 min',
+            cookTime: '30 min',
+            ingredients: ['200 g de farine', '2 oeufs'],
+            steps: ['Mélanger les ingrédients', 'Cuire 30 minutes'],
+            image: null,
+            tags: [],
+            createdAt: null,
+            updatedAt: null
+          })
+        }
+      })
+      .catch(error => {
+        console.error('Failed to delete recipe:', error)
+        alert('Erreur lors de la suppression')
+      })
   }
 
   function loadRecipe(r) {
@@ -157,7 +279,7 @@ export default function App() {
   }
 
   function createNew() {
-    setRecipe({ title: '', subtitle: '', servings: '', prepTime: '', cookTime: '', ingredients: [], steps: [], image: null, tags: [] })
+    setRecipe({ title: '', subtitle: '', servings: '', prepTime: '', cookTime: '', ingredients: [], steps: [], image: null, tags: [], createdAt: null, updatedAt: null })
     setShowProfile(false)
   }
 
@@ -202,47 +324,74 @@ export default function App() {
       ) : (
         <>
           <header className="app-header">
-            <h1>📝 Créateur de Recettes</h1>
-            <div style={{display:'flex',alignItems:'center',gap:12}}>
-              {showProfile && <SearchBar value={searchQuery} onChange={setSearchQuery} />}
-              <div className="buttons">
-                {!showProfile && (
-                  <>
-                    <div className="theme-picker">
-                      <label style={{fontSize: '15px', marginRight: '8px', fontWeight: '600'}}>🎨 Couleur:</label>
-                      <select value={theme} onChange={(e) => setTheme(e.target.value)} className="theme-select">
-                        <option value="orange">🧡 Orange</option>
-                        <option value="blue">💙 Bleu</option>
-                        <option value="green">💚 Vert</option>
-                        <option value="purple">💜 Violet</option>
-                        <option value="pink">💗 Rose</option>
-                      </select>
-                    </div>
-                    <button className="btn" onClick={() => setShowHelp((s) => !s)} title="Afficher / Masquer l'aide">
-                      💡 {showHelp ? 'Masquer' : 'Aide'}
-                    </button>
-                    <button className="btn" onClick={printRecipe} title="Ouvrir la boîte d'impression">🖨️ Imprimer</button>
-                    <button className="btn btn-primary" onClick={downloadPdf} title="Télécharger en PDF">📥 Télécharger PDF</button>
-                    <button className="btn" onClick={saveCurrentRecipe} title="Enregistrer la recette">💾 Enregistrer</button>
-                  </>
-                )}
-                {showProfile && currentUser ? (
-                  <>
-                    <button className="btn" onClick={() => setShowProfile((s) => !s)}>{currentUser.name || currentUser.email}</button>
-                    <button className="btn" onClick={handleLogout}>Se déconnecter</button>
-                  </>
-                ) : showProfile ? (
-                  <button className="btn" onClick={() => setShowAuth(true)}>Se connecter</button>
-                ) : null}
+            {showProfile && <h1>📝 Créateur de Recettes</h1>}
+            {!showProfile && (
+              <div className="edit-header">
+                <button className="btn btn-ghost" onClick={() => setShowProfile(true)} title="Retour à la collection">
+                  ← Retour
+                </button>
+                <div className="edit-controls">
+                  <div className="theme-picker">
+                    <label style={{fontSize: '15px', marginRight: '8px', fontWeight: '600'}}>🎨 Couleur:</label>
+                    <select value={theme} onChange={(e) => setTheme(e.target.value)} className="theme-select">
+                      <option value="orange">🧡 Orange</option>
+                      <option value="blue">💙 Bleu</option>
+                      <option value="green">💚 Vert</option>
+                      <option value="purple">💜 Violet</option>
+                      <option value="pink">💗 Rose</option>
+                    </select>
+                  </div>
+                  <button className="btn" onClick={() => setShowHelp((s) => !s)} title="Afficher / Masquer l'aide">
+                    💡 {showHelp ? 'Masquer' : 'Aide'}
+                  </button>
+                  <button className="btn" onClick={printRecipe} title="Ouvrir la boîte d'impression">🖨️ Imprimer</button>
+                  <button className="btn" onClick={downloadPdf} title="Télécharger en PDF">📥 Télécharger PDF</button>
+                  <button className="btn btn-primary" onClick={saveCurrentRecipe} title="Enregistrer la recette">💾 Enregistrer</button>
+                </div>
               </div>
-            </div>
+            )}
+            {showProfile && (
+              <>
+                <div className="header-search-row" style={{display:'flex',alignItems:'center',gap:12}}>
+                  <SearchBar value={searchQuery} onChange={setSearchQuery} />
+                </div>
+                <div className="buttons">
+                  <div className="theme-picker">
+                    <label style={{fontSize: '15px', marginRight: '8px', fontWeight: '600'}}>🎨 Couleur:</label>
+                    <select value={theme} onChange={(e) => setTheme(e.target.value)} className="theme-select">
+                      <option value="orange">🧡 Orange</option>
+                      <option value="blue">💙 Bleu</option>
+                      <option value="green">💚 Vert</option>
+                      <option value="purple">💜 Violet</option>
+                      <option value="pink">💗 Rose</option>
+                    </select>
+                  </div>
+                  {currentUser ? (
+                    <>
+                      <button className="btn" onClick={handleLogout}>Se déconnecter</button>
+                    </>
+                  ) : (
+                    <button className="btn" onClick={() => setShowAuth(true)}>Se connecter</button>
+                  )}
+                </div>
+              </>
+            )}
           </header>
+
+          {/* Mobile search - full width below header */}
+          {showProfile && (
+            <div className="mobile-search">
+              <SearchBar value={searchQuery} onChange={setSearchQuery} />
+            </div>
+          )}
 
           <main className={showProfile ? "full-profile" : "split"}>
             <section className="left" style={showProfile ? { width: '100%' } : {}}>
               {showProfile ? (
                 <Profile
                   user={currentUser}
+                  searchResults={searchResults}
+                  searchQuery={searchQuery}
                   onLogout={handleLogout}
                   onLoadRecipe={loadRecipe}
                   onDeleteRecipe={deleteRecipe}

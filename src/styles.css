@@ -23,6 +23,11 @@ body{
   line-height: 1.6;
 }
 
+/* Hide mobile search by default (shown only on mobile) */
+.mobile-search{
+  display: none;
+}
+
 /* ========== AUTH PANEL STYLES ========== */
 .auth-panel{
   max-width: 420px;
@@ -179,6 +184,7 @@ body{
 .section-header{
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   margin-bottom: 24px;
 }
@@ -187,6 +193,11 @@ body{
   font-weight: 700;
   color: var(--accent);
   margin: 0;
+}
+.section-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 .recipe-count{
   background: var(--accent-light);
@@ -240,6 +251,7 @@ body{
   margin: 0 0 12px 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -255,6 +267,17 @@ body{
   border-radius: 12px;
   font-size: 13px;
   font-weight: 600;
+}
+.recipe-card-dates{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+.date-item{
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 .recipe-card-actions{
   display: flex;
@@ -359,6 +382,33 @@ body{
   flex-wrap: wrap;
 }
 
+/* Edit header layout - Retour on left, controls on right */
+.edit-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+.edit-controls{
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* User info display in header */
+.user-info{
+  display: inline-flex;
+  align-items: center;
+  padding: 14px 24px;
+  background: var(--accent-light);
+  color: var(--accent);
+  border-radius: var(--radius-md);
+  font-size: 17px;
+  font-weight: 600;
+  border: 2px solid var(--accent);
+}
+
 /* Theme picker styling */
 .theme-picker{
   display: flex;
@@ -382,6 +432,22 @@ body{
 }
 .theme-select:hover{
   border-color: var(--accent);
+}
+
+/* Sort controls */
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sort-controls label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark);
 }
 
 /* Button system - GROS boutons clairs et simples */
@@ -1012,21 +1078,62 @@ kbd{
     grid-template-columns: 1fr;
   }
 
+  /* Section header responsive */
+  .section-header{
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .section-title-group{
+    justify-content: center;
+  }
+  .section-title{
+    font-size: 20px;
+  }
+  .sort-controls{
+    justify-content: center;
+  }
+
+  /* Edit header mobile */
+  .edit-header{
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .edit-controls{
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
   .split{flex-direction:column;height:auto}
   .left, .right{padding:16px;height:auto}
   .left{border-right:none; box-shadow: none;}
 
-  /* Buttons become stacked and full width for easier tapping */
-  .app-header .buttons{
+  /* Mobile header layout */
+  .app-header{
     flex-direction: row;
-    flex-wrap: wrap;
-    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px;
   }
-  .app-header .buttons .btn{
-    flex: 1;
+  .header-search-row{
+    display: none !important;
+  }
+  .app-header .buttons{
+    flex-shrink: 0;
+  }
+
+  /* Search bar full width on mobile - moved outside header */
+  .mobile-search{
+    display: block;
+    padding: 16px;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+  }
+  .mobile-search input{
+    width: 100%;
     min-width: auto;
-    font-size: 15px;
-    padding: 12px 16px;
   }
 
   /* Make editor controls larger and easier to tap */

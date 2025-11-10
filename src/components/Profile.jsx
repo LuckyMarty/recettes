@@ -1,13 +1,34 @@
 import React, { useState } from 'react'
 
-export default function Profile({ user, onLogout, onLoadRecipe, onDeleteRecipe, onCreateNew, onSaveRecipe, onUpdateUser }) {
+export default function Profile({ user, searchResults, searchQuery, onLogout, onLoadRecipe, onDeleteRecipe, onCreateNew, onSaveRecipe, onUpdateUser }) {
   const [folderName, setFolderName] = useState('')
   const [selectedFolder, setSelectedFolder] = useState(null)
+  const [sortBy, setSortBy] = useState('created-desc') // 'created-desc', 'created-asc', 'updated-desc', 'updated-asc', 'title-asc', 'title-desc'
 
   if (!user) return null
 
-  const recipes = user.recipes || []
+  // Use searchResults if there's a search query, otherwise use all recipes
+  const recipes = searchQuery ? searchResults : (user.recipes || [])
   const folders = user.folders || {}
+
+  // Sort recipes based on sortBy
+  const sortedRecipes = [...recipes].sort((a, b) => {
+    switch (sortBy) {
+      case 'title-asc':
+        return (a.title || '').localeCompare(b.title || '')
+      case 'title-desc':
+        return (b.title || '').localeCompare(a.title || '')
+      case 'created-asc':
+        return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
+      case 'created-desc':
+        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+      case 'updated-asc':
+        return new Date(a.updatedAt || 0).getTime() - new Date(b.updatedAt || 0).getTime()
+      case 'updated-desc':
+      default:
+        return new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()
+    }
+  })
 
   function createFolder() {
     if (!folderName.trim()) return
@@ -23,8 +44,8 @@ export default function Profile({ user, onLogout, onLoadRecipe, onDeleteRecipe, 
         <div className="profile-welcome">
           <div className="profile-avatar">👤</div>
           <div>
-            <h2 className="profile-name">{user.name || user.email}</h2>
-            <p className="profile-subtitle">{recipes.length} recette{recipes.length !== 1 ? 's' : ''}</p>
+            <h2 className="profile-name">{user.name}</h2>
+            <p className="profile-subtitle">{sortedRecipes.length} recette{sortedRecipes.length !== 1 ? 's' : ''}</p>
           </div>
         </div>
         <button className="btn btn-primary btn-large" onClick={onCreateNew}>
@@ -32,9 +53,9 @@ export default function Profile({ user, onLogout, onLoadRecipe, onDeleteRecipe, 
         </button>
       </div>
 
-      {recipes.length === 0 ? (
+      {sortedRecipes.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-icon">�</div>
+          <div className="empty-icon">🍳</div>
           <h3>Commencez votre collection</h3>
           <p className="muted-text">Créez votre première recette et partagez vos créations culinaires</p>
           <button className="btn btn-primary" onClick={onCreateNew}>➕ Créer ma première recette</button>
@@ -43,11 +64,32 @@ export default function Profile({ user, onLogout, onLoadRecipe, onDeleteRecipe, 
         <>
           <div className="profile-section">
             <div className="section-header">
-              <h3 className="section-title">📄 Mes recettes</h3>
-              <span className="recipe-count">{recipes.length}</span>
+              <div className="section-title-group">
+                <h3 className="section-title">
+                  {searchQuery ? `Résultats pour "${searchQuery}"` : 'Mes recettes'}
+                </h3>
+                <span className="recipe-count">{sortedRecipes.length}</span>
+              </div>
+              <div className="sort-controls">
+                <label>
+                  Trier par
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="theme-select"
+                  >
+                    <option value="updated-desc">Plus récent</option>
+                    <option value="created-desc">Créé récemment</option>
+                    <option value="title-asc">A-Z</option>
+                    <option value="title-desc">Z-A</option>
+                    <option value="updated-asc">Plus ancien</option>
+                    <option value="created-asc">Créé il y a longtemps</option>
+                  </select>
+                </label>
+              </div>
             </div>
             <div className="recipes-grid">
-              {recipes.map((r) => (
+              {sortedRecipes.map((r) => (
                 <div key={r.id} className="recipe-card-item">
                   {r.image && <img src={r.image} alt={r.title} className="recipe-card-thumb" />}
                   <div className="recipe-card-content">
@@ -58,6 +100,12 @@ export default function Profile({ user, onLogout, onLoadRecipe, onDeleteRecipe, 
                         {r.tags.slice(0, 3).map((tag, i) => (
                           <span key={i} className="mini-tag">{tag}</span>
                         ))}
+                      </div>
+                    )}
+                    {(r.createdAt || r.updatedAt) && (
+                      <div className="recipe-card-dates">
+                        {r.createdAt && <span className="date-item">📅 Créée: {new Date(r.createdAt).toLocaleDateString('fr-FR')}</span>}
+                        {r.updatedAt && r.updatedAt !== r.createdAt && <span className="date-item">🔄 Modifiée: {new Date(r.updatedAt).toLocaleDateString('fr-FR')}</span>}
                       </div>
                     )}
                   </div>
