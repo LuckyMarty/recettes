@@ -488,6 +488,11 @@ body{
   cursor:not-allowed;
   transform: none !important;
 }
+.btn-primary[disabled]{
+  background: #ccc;
+  border-color: #ccc;
+  color: #888;
+}
 .btn-primary{
   background: var(--accent);
   color:#fff;
@@ -496,6 +501,14 @@ body{
 .btn-primary:hover{
   background: #d96d40;
   border-color: #d96d40;
+}
+.btn-secondary{
+  background: white;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.btn-secondary:hover{
+  background: var(--accent-light);
 }
 .btn-ghost{
   background:transparent;

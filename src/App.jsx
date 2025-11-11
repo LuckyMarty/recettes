@@ -25,6 +25,7 @@ export default function App() {
   const [loadingRecipes, setLoadingRecipes] = useState(false)
   const [allRecipes, setAllRecipes] = useState([]) // Store all recipes separately
   const [deleteConfirm, setDeleteConfirm] = useState(null) // { id, title } or null
+  const [isGuest, setIsGuest] = useState(false) // Guest mode state
   const [recipe, setRecipe] = useState({
     title: 'Ma recette',
     subtitle: 'Une délicieuse recette à partager',
@@ -52,14 +53,14 @@ export default function App() {
 
   // Load recipes when user logs in
   useEffect(() => {
-    if (currentUser) {
+    if (currentUser && !isGuest) {
       loadUserRecipes()
     } else {
       setSearchResults([])
       setAllRecipes([])
       setShowProfile(false)
     }
-  }, [currentUser]) // Removed loadingRecipes to prevent infinite loop
+  }, [currentUser, isGuest]) // Removed loadingRecipes to prevent infinite loop
 
   // API functions
   const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3002/api'
@@ -198,6 +199,7 @@ export default function App() {
         localStorage.setItem('recettes_current', String(user.id))
         setShowAuth(false)
         setShowProfile(true)
+        setIsGuest(false) // Exit guest mode on login
       })
       .catch(error => {
         toast.error(`Erreur de connexion: ${error.message}`)
@@ -212,6 +214,7 @@ export default function App() {
         localStorage.setItem('recettes_current', String(user.id))
         setShowAuth(false)
         setShowProfile(true)
+        setIsGuest(false) // Exit guest mode on signup
       })
       .catch(error => {
         toast.error(`Erreur d'inscription: ${error.message}`)
@@ -222,9 +225,14 @@ export default function App() {
   function handleLogout() {
     setCurrentUser(null)
     localStorage.removeItem('recettes_current')
+    setIsGuest(false) // Exit guest mode on logout
   }
 
   function saveCurrentRecipe() {
+    if (isGuest) {
+      toast.info('Connectez-vous pour sauvegarder vos recettes')
+      return
+    }
     if (!currentUser || !recipe.title.trim()) return
 
     const recipeToSave = {
@@ -365,9 +373,45 @@ export default function App() {
       '--accent': themes[theme].accent,
       '--accent-light': themes[theme].light
     }}>
-      {!currentUser ? (
+      {!currentUser && !isGuest ? (
         <main style={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 88px)'}}>
-          <Auth onLogin={handleLogin} onSignup={handleSignup} onClose={() => {}} />
+          <div style={{textAlign: 'center', maxWidth: '400px', padding: '20px'}}>
+            <h1 style={{fontSize: '2.5rem', marginBottom: '1rem', color: 'var(--accent)'}}>📝 Créateur de Recettes</h1>
+            <p style={{marginBottom: '2rem', color: '#666', fontSize: '1.1rem'}}>
+              Créez, sauvegardez et partagez vos meilleures recettes
+            </p>
+            
+            <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+              <button 
+                className="btn btn-primary" 
+                style={{padding: '12px 24px', fontSize: '1.1rem'}}
+                onClick={() => setShowAuth(true)}
+              >
+                🔐 Se connecter / S'inscrire
+              </button>
+              
+              <button 
+                className="btn btn-secondary" 
+                style={{padding: '12px 24px', fontSize: '1.1rem'}}
+                onClick={() => {
+                  setIsGuest(true)
+                  setRecipe({ title: '', subtitle: '', servings: '', prepTime: '', cookTime: '', ingredients: [], steps: [], image: null, tags: [], createdAt: null, updatedAt: null })
+                }}
+              >
+                🚀 Utiliser sans compte
+              </button>
+            </div>
+            
+            <p style={{marginTop: '2rem', fontSize: '0.9rem', color: '#888'}}>
+              En mode invité, vos recettes ne seront pas sauvegardées
+            </p>
+          </div>
+          
+          {showAuth && (
+            <div style={{position:'fixed',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.3)'}}>
+              <Auth onLogin={handleLogin} onSignup={handleSignup} onClose={() => setShowAuth(false)} />
+            </div>
+          )}
         </main>
       ) : (
         <>
@@ -375,7 +419,13 @@ export default function App() {
             {showProfile && <h1>📝 Créateur de Recettes</h1>}
             {!showProfile && (
               <div className="edit-header">
-                <button className="btn btn-ghost" onClick={() => setShowProfile(true)} title="Retour à la collection">
+                <button className="btn btn-ghost" onClick={() => {
+                  if (isGuest) {
+                    setIsGuest(false)
+                  } else {
+                    setShowProfile(true)
+                  }
+                }} title={isGuest ? "Retour à l'accueil" : "Retour à la collection"}>
                   ← Retour
                 </button>
                 <div className="edit-controls">
@@ -394,7 +444,14 @@ export default function App() {
                   </button>
                   <button className="btn" onClick={printRecipe} title="Ouvrir la boîte d'impression">🖨️ Imprimer</button>
                   <button className="btn" onClick={downloadPdf} title="Télécharger en PDF">📥 Télécharger PDF</button>
-                  <button className="btn btn-primary" onClick={saveCurrentRecipe} title="Enregistrer la recette">💾 Enregistrer</button>
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={saveCurrentRecipe} 
+                    title={isGuest ? "Connectez-vous pour sauvegarder" : "Enregistrer la recette"}
+                    disabled={isGuest}
+                  >
+                    💾 {isGuest ? 'Connexion requise' : 'Enregistrer'}
+                  </button>
                 </div>
               </div>
             )}
@@ -414,7 +471,7 @@ export default function App() {
                       <option value="pink">💗 Rose</option>
                     </select>
                   </div>
-                  {currentUser ? (
+                  {currentUser && !isGuest ? (
                     <>
                       <button className="btn" onClick={handleLogout}>Se déconnecter</button>
                     </>
@@ -435,7 +492,7 @@ export default function App() {
 
           <main className={showProfile ? "full-profile" : "split"}>
             <section className="left" style={showProfile ? { width: '100%' } : {}}>
-              {showProfile ? (
+              {showProfile && !isGuest ? (
                 <Profile
                   user={currentUser}
                   searchResults={searchResults}
