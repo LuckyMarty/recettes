@@ -22,24 +22,28 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Increase payload limit for images
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// Database connection
+// Database connection (use a pool to avoid "closed connection" errors)
 let db;
 
 async function initializeDatabase() {
   try {
-    db = await mysql.createConnection({
+    // Use a pool so connections are managed and recreated when needed
+    db = mysql.createPool({
       host: process.env.DB_HOST || 'localhost',
       user: process.env.DB_USER || 'root',
       password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'recipe_app'
+      database: process.env.DB_NAME || 'recipe_app',
+      waitForConnections: true,
+      connectionLimit: parseInt(process.env.DB_CONN_LIMIT || '10', 10),
+      queueLimit: 0
     });
 
-    console.log('Connected to MySQL database');
+    console.log('Initialized MySQL connection pool');
 
     // Create tables if they don't exist
     await createTables();
   } catch (error) {
-    console.error('Database connection failed:', error);
+    console.error('Database initialization failed:', error);
     process.exit(1);
   }
 }
