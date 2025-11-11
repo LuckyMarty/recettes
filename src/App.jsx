@@ -486,9 +486,9 @@ export default function App() {
                   <SearchBar value={searchQuery} onChange={setSearchQuery} />
                 </div>
                 <div className="buttons">
-                  {currentUser && !isGuest && (
+                  {/* {currentUser && !isGuest && (
                     <div className="header-user">Bonjour, {currentUser.name}</div>
-                  )}
+                  )} */}
                   <div className="theme-picker">
                     <label style={{fontSize: '15px', marginRight: '8px', fontWeight: '600'}}>🎨 Couleur:</label>
                     <select value={theme} onChange={(e) => setTheme(e.target.value)} className="theme-select">
