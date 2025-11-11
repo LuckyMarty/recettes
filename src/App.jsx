@@ -23,6 +23,7 @@ export default function App() {
   const [showProfile, setShowProfile] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [loadingRecipes, setLoadingRecipes] = useState(false)
+  const [allRecipes, setAllRecipes] = useState([]) // Store all recipes separately
   const [deleteConfirm, setDeleteConfirm] = useState(null) // { id, title } or null
   const [recipe, setRecipe] = useState({
     title: 'Ma recette',
@@ -55,6 +56,7 @@ export default function App() {
       loadUserRecipes()
     } else {
       setSearchResults([])
+      setAllRecipes([])
       setShowProfile(false)
     }
   }, [currentUser]) // Removed loadingRecipes to prevent infinite loop
@@ -78,6 +80,7 @@ export default function App() {
           updatedAt: r.updated_at
         }))
         setUsers([{ ...currentUser, recipes: mappedRecipes }])
+        setAllRecipes(mappedRecipes)
         setSearchResults(mappedRecipes)
         setShowProfile(true)
       }
@@ -162,10 +165,9 @@ export default function App() {
 
   // run search when query changes
   useEffect(() => {
-    if (!currentUser) return setSearchResults([])
-    if (!searchQuery) return setSearchResults(currentUser.recipes || [])
+    if (!searchQuery) return setSearchResults(allRecipes)
     const q = searchQuery.toLowerCase()
-    const results = (currentUser.recipes || []).filter((r) => {
+    const results = allRecipes.filter((r) => {
       return (
         (r.title && r.title.toLowerCase().includes(q)) ||
         (r.subtitle && r.subtitle.toLowerCase().includes(q)) ||
@@ -175,7 +177,7 @@ export default function App() {
       )
     })
     setSearchResults(results)
-  }, [searchQuery, currentUser])
+  }, [searchQuery, allRecipes])
 
   // Do not return early — always call hooks in the same order.
   // We render the auth/full-landing conditionally inside the main JSX below.

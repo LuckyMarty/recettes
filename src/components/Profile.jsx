@@ -111,7 +111,7 @@ export default function Profile({ user, searchResults, searchQuery, onLogout, on
                   </div>
                   <div className="recipe-card-actions">
                     <button className="btn small btn-primary" onClick={() => onLoadRecipe(r)}>
-                      ✏️ Éditer
+                      ✏️ Modifier
                     </button>
                     <button className="btn small btn-ghost" onClick={() => onDeleteRecipe(r.id)}>
                       🗑️
