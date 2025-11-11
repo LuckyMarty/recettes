@@ -44,9 +44,22 @@ export default function App() {
   const [searchResults, setSearchResults] = useState([])
   useEffect(() => {
     // Check if user is logged in (stored in localStorage for session persistence)
+    const stored = localStorage.getItem('recettes_user')
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored)
+        setCurrentUser(parsed)
+        return
+      } catch (e) {
+        console.warn('Failed to parse stored user:', e)
+        localStorage.removeItem('recettes_user')
+      }
+    }
+
     const curId = localStorage.getItem('recettes_current')
     if (curId && !currentUser) {
-      // Only set if not already set
+      // As a fallback we could fetch from the API, but prefer restoring from localStorage
+      // If you want server-backed rehydration, implement GET /api/users/:id on the server.
       setCurrentUser({ id: parseInt(curId) })
     }
   }, []) // Remove currentUser dependency to prevent infinite loop
@@ -164,6 +177,15 @@ export default function App() {
     return response.json()
   }
 
+    async function apiGetUser(id) {
+      const response = await fetch(`${API_BASE}/users/${id}`)
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch user')
+      }
+      return data
+    }
+
   // run search when query changes
   useEffect(() => {
     if (!searchQuery) return setSearchResults(allRecipes)
@@ -197,6 +219,7 @@ export default function App() {
       .then(user => {
         setCurrentUser(user)
         localStorage.setItem('recettes_current', String(user.id))
+  localStorage.setItem('recettes_user', JSON.stringify(user))
         setShowAuth(false)
         setShowProfile(true)
         setIsGuest(false) // Exit guest mode on login
@@ -212,6 +235,7 @@ export default function App() {
       .then(user => {
         setCurrentUser(user)
         localStorage.setItem('recettes_current', String(user.id))
+  localStorage.setItem('recettes_user', JSON.stringify(user))
         setShowAuth(false)
         setShowProfile(true)
         setIsGuest(false) // Exit guest mode on signup
@@ -225,6 +249,7 @@ export default function App() {
   function handleLogout() {
     setCurrentUser(null)
     localStorage.removeItem('recettes_current')
+    localStorage.removeItem('recettes_user')
     setIsGuest(false) // Exit guest mode on logout
   }
 
@@ -461,6 +486,9 @@ export default function App() {
                   <SearchBar value={searchQuery} onChange={setSearchQuery} />
                 </div>
                 <div className="buttons">
+                  {currentUser && !isGuest && (
+                    <div className="header-user">Bonjour, {currentUser.name}</div>
+                  )}
                   <div className="theme-picker">
                     <label style={{fontSize: '15px', marginRight: '8px', fontWeight: '600'}}>🎨 Couleur:</label>
                     <select value={theme} onChange={(e) => setTheme(e.target.value)} className="theme-select">

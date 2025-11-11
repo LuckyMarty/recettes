@@ -382,6 +382,13 @@ body{
   flex-wrap: wrap;
 }
 
+.header-user{
+  font-size: 15px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-right: 8px;
+}
+
 /* Edit header layout - Retour on left, controls on right */
 .edit-header{
   display: flex;
