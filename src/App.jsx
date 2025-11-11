@@ -5,6 +5,7 @@ import html2pdf from 'html2pdf.js'
 import Auth from './components/Auth.jsx'
 import Profile from './components/Profile.jsx'
 import SearchBar from './components/SearchBar.jsx'
+import toast, { Toaster } from 'react-hot-toast'
 
 export default function App() {
   const [showHelp, setShowHelp] = useState(false)
@@ -21,6 +22,8 @@ export default function App() {
   const [showAuth, setShowAuth] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [loadingRecipes, setLoadingRecipes] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState(null) // { id, title } or null
   const [recipe, setRecipe] = useState({
     title: 'Ma recette',
     subtitle: 'Une délicieuse recette à partager',
@@ -40,37 +43,48 @@ export default function App() {
   useEffect(() => {
     // Check if user is logged in (stored in localStorage for session persistence)
     const curId = localStorage.getItem('recettes_current')
-    if (curId) {
-      // In a real app, you'd validate the token/session here
-      // For now, we'll just store the user ID
+    if (curId && !currentUser) {
+      // Only set if not already set
       setCurrentUser({ id: parseInt(curId) })
     }
-  }, [])
+  }, []) // Remove currentUser dependency to prevent infinite loop
 
   // Load recipes when user logs in
   useEffect(() => {
     if (currentUser) {
       loadUserRecipes()
-      setShowProfile(true)
     } else {
       setSearchResults([])
       setShowProfile(false)
     }
-  }, [currentUser])
+  }, [currentUser]) // Removed loadingRecipes to prevent infinite loop
 
   // API functions
   const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3002/api'
 
   async function loadUserRecipes() {
+    if (loadingRecipes) return // Prevent multiple calls
+    setLoadingRecipes(true)
     try {
       const response = await fetch(`${API_BASE}/users/${currentUser.id}/recipes`)
       if (response.ok) {
         const recipes = await response.json()
-        setUsers([{ ...currentUser, recipes }])
-        setSearchResults(recipes)
+        // Map snake_case to camelCase
+        const mappedRecipes = recipes.map(r => ({
+          ...r,
+          prepTime: r.prep_time,
+          cookTime: r.cook_time,
+          createdAt: r.created_at,
+          updatedAt: r.updated_at
+        }))
+        setUsers([{ ...currentUser, recipes: mappedRecipes }])
+        setSearchResults(mappedRecipes)
+        setShowProfile(true)
       }
     } catch (error) {
       console.error('Failed to load recipes:', error)
+    } finally {
+      setLoadingRecipes(false)
     }
   }
 
@@ -184,7 +198,7 @@ export default function App() {
         setShowProfile(true)
       })
       .catch(error => {
-        alert(`Erreur de connexion: ${error.message}`)
+        toast.error(`Erreur de connexion: ${error.message}`)
         console.error('Login error:', error)
       })
   }
@@ -198,7 +212,7 @@ export default function App() {
         setShowProfile(true)
       })
       .catch(error => {
-        alert(`Erreur d'inscription: ${error.message}`)
+        toast.error(`Erreur d'inscription: ${error.message}`)
         console.error('Signup error:', error)
       })
   }
@@ -214,18 +228,25 @@ export default function App() {
     const recipeToSave = {
       ...recipe,
       user_id: currentUser.id,
+      prep_time: recipe.prepTime,
+      cook_time: recipe.cookTime,
       updated_at: new Date().toISOString()
     }
+    // Remove the camelCase versions
+    delete recipeToSave.prepTime
+    delete recipeToSave.cookTime
 
     if (recipe.id) {
       // Update existing recipe
       apiUpdateRecipe(recipe.id, recipeToSave)
         .then(() => {
           loadUserRecipes() // Reload recipes
+          setShowProfile(true) // Switch to profile view
+          toast.success('Recette mise à jour avec succès !')
         })
         .catch(error => {
           console.error('Failed to update recipe:', error)
-          alert('Erreur lors de la sauvegarde')
+          toast.error('Erreur lors de la sauvegarde')
         })
     } else {
       // Create new recipe
@@ -234,42 +255,59 @@ export default function App() {
         .then(result => {
           setRecipe({ ...recipe, id: result.id })
           loadUserRecipes() // Reload recipes
+          setShowProfile(true) // Switch to profile view
+          toast.success('Recette créée avec succès !')
         })
         .catch(error => {
           console.error('Failed to create recipe:', error)
-          alert('Erreur lors de la sauvegarde')
+          toast.error('Erreur lors de la sauvegarde')
         })
     }
   }
 
   function deleteRecipe(id) {
     if (!currentUser) return
-    if (!confirm('Supprimer cette recette ?')) return
+    // Find the recipe title for confirmation
+    const recipeToDelete = searchResults.find(r => r.id === id)
+    if (recipeToDelete) {
+      setDeleteConfirm({ id, title: recipeToDelete.title })
+    }
+  }
 
-    apiDeleteRecipe(id)
-      .then(() => {
-        loadUserRecipes() // Reload recipes
-        // Clear editor if the deleted recipe was currently loaded
-        if (recipe.id === id) {
-          setRecipe({
-            title: 'Ma recette',
-            subtitle: 'Une délicieuse recette à partager',
-            servings: '2',
-            prepTime: '15 min',
-            cookTime: '30 min',
-            ingredients: ['200 g de farine', '2 oeufs'],
-            steps: ['Mélanger les ingrédients', 'Cuire 30 minutes'],
-            image: null,
-            tags: [],
-            createdAt: null,
-            updatedAt: null
-          })
-        }
-      })
-      .catch(error => {
-        console.error('Failed to delete recipe:', error)
-        alert('Erreur lors de la suppression')
-      })
+  function confirmDelete() {
+    if (!deleteConfirm) return
+
+    const { id } = deleteConfirm
+    setDeleteConfirm(null) // Close modal
+
+    toast.promise(
+      apiDeleteRecipe(id),
+      {
+        loading: 'Suppression en cours...',
+        success: 'Recette supprimée avec succès !',
+        error: 'Erreur lors de la suppression'
+      }
+    ).then(() => {
+      loadUserRecipes() // Reload recipes
+      // Clear editor if the deleted recipe was currently loaded
+      if (recipe.id === id) {
+        setRecipe({
+          title: 'Ma recette',
+          subtitle: 'Une délicieuse recette à partager',
+          servings: '2',
+          prepTime: '15 min',
+          cookTime: '30 min',
+          ingredients: ['200 g de farine', '2 oeufs'],
+          steps: ['Mélanger les ingrédients', 'Cuire 30 minutes'],
+          image: null,
+          tags: [],
+          createdAt: null,
+          updatedAt: null
+        })
+      }
+    }).catch(error => {
+      console.error('Failed to delete recipe:', error)
+    })
   }
 
   function loadRecipe(r) {
@@ -431,6 +469,33 @@ export default function App() {
           <Auth onLogin={handleLogin} onSignup={handleSignup} onClose={() => setShowAuth(false)} />
         </div>
       )}
+      {deleteConfirm && (
+        <div style={{position:'fixed',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.3)',zIndex:1000}}>
+          <div style={{background:'white',padding:'20px',borderRadius:'8px',maxWidth:'400px',width:'90%'}}>
+            <h3 style={{margin:'0 0 16px 0',color:'#333'}}>Confirmer la suppression</h3>
+            <p style={{margin:'0 0 20px 0',color:'#666'}}>
+              Êtes-vous sûr de vouloir supprimer la recette "<strong>{deleteConfirm.title}</strong>" ?
+              <br />
+              Cette action est irréversible.
+            </p>
+            <div style={{display:'flex',gap:'12px',justifyContent:'flex-end'}}>
+              <button 
+                onClick={() => setDeleteConfirm(null)}
+                style={{padding:'8px 16px',border:'1px solid #ddd',borderRadius:'4px',background:'white',cursor:'pointer'}}
+              >
+                Annuler
+              </button>
+              <button 
+                onClick={confirmDelete}
+                style={{padding:'8px 16px',border:'none',borderRadius:'4px',background:'#dc3545',color:'white',cursor:'pointer'}}
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <Toaster position="bottom-right" />
     </div>
   )
 }

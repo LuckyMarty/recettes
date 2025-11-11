@@ -7,8 +7,8 @@ export default function Profile({ user, searchResults, searchQuery, onLogout, on
 
   if (!user) return null
 
-  // Use searchResults if there's a search query, otherwise use all recipes
-  const recipes = searchQuery ? searchResults : (user.recipes || [])
+  // Always use searchResults - it contains all recipes when not searching
+  const recipes = searchResults
   const folders = user.folders || {}
 
   // Sort recipes based on sortBy

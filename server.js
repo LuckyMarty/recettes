@@ -7,9 +7,20 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Helper function to safely parse JSON
+function safeJsonParse(str, defaultValue = []) {
+  if (!str || str === 'undefined' || str === 'null') return defaultValue;
+  try {
+    return JSON.parse(str);
+  } catch {
+    return defaultValue;
+  }
+}
+
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // Increase payload limit for images
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Database connection
 let db;
@@ -58,7 +69,7 @@ async function createTables() {
         cook_time VARCHAR(50),
         ingredients JSON,
         steps JSON,
-        image TEXT,
+        image LONGTEXT,
         tags JSON,
         cuisine VARCHAR(100),
         meal_type VARCHAR(100),
@@ -69,6 +80,16 @@ async function createTables() {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )
     `);
+
+    // Ensure image column can handle large data
+    await db.execute(`
+      ALTER TABLE recipes MODIFY COLUMN image LONGTEXT
+    `).catch(err => {
+      // Ignore error if column is already LONGTEXT
+      if (!err.message.includes('same type')) {
+        console.warn('Could not modify image column:', err.message);
+      }
+    });
 
     console.log('Database tables created successfully');
   } catch (error) {
@@ -86,7 +107,7 @@ app.post('/api/auth/register', async (req, res) => {
     // Check if user already exists
     const [existing] = await db.execute('SELECT id FROM users WHERE email = ?', [email]);
     if (existing.length > 0) {
-      return res.status(400).json({ error: 'User already exists' });
+      return res.status(400).json({ error: "L'utilisateur existe déjà" });
     }
 
     // Hash password
@@ -102,7 +123,7 @@ app.post('/api/auth/register', async (req, res) => {
     res.json({ id: result.insertId, email, name });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ error: 'Registration failed' });
+    res.status(500).json({ error: "L'inscription a échoué" });
   }
 });
 
@@ -114,7 +135,7 @@ app.post('/api/auth/login', async (req, res) => {
     const [users] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
 
     if (users.length === 0) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: "Identifiants invalides" });
     }
 
     const user = users[0];
@@ -122,7 +143,7 @@ app.post('/api/auth/login', async (req, res) => {
     // Compare password with hash
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: "Identifiants invalides" });
     }
 
     res.json({
@@ -133,7 +154,7 @@ app.post('/api/auth/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
+    res.status(500).json({ error: "La connexion a échoué" });
   }
 });
 
@@ -150,15 +171,15 @@ app.get('/api/users/:userId/recipes', async (req, res) => {
     // Parse JSON fields
     const formattedRecipes = recipes.map(recipe => ({
       ...recipe,
-      ingredients: JSON.parse(recipe.ingredients || '[]'),
-      steps: JSON.parse(recipe.steps || '[]'),
-      tags: JSON.parse(recipe.tags || '[]')
+      ingredients: safeJsonParse(recipe.ingredients),
+      steps: safeJsonParse(recipe.steps),
+      tags: safeJsonParse(recipe.tags)
     }));
 
     res.json(formattedRecipes);
   } catch (error) {
     console.error('Error fetching recipes:', error);
-    res.status(500).json({ error: 'Failed to fetch recipes' });
+    res.status(500).json({ error: "Échec de la récupération des recettes" });
   }
 });
 
@@ -191,12 +212,12 @@ app.post('/api/recipes', async (req, res) => {
       user_id, title, subtitle, servings, prep_time, cook_time,
       JSON.stringify(ingredients), JSON.stringify(steps), image,
       JSON.stringify(tags), cuisine, meal_type, dietary, difficulty
-    ]);
+    ].map(val => val === undefined ? null : val));
 
     res.json({ id: result.insertId });
   } catch (error) {
     console.error('Error creating recipe:', error);
-    res.status(500).json({ error: 'Failed to create recipe' });
+    res.status(500).json({ error: "Échec de la création de la recette" });
   }
 });
 
@@ -230,12 +251,12 @@ app.put('/api/recipes/:id', async (req, res) => {
       title, subtitle, servings, prep_time, cook_time,
       JSON.stringify(ingredients), JSON.stringify(steps), image,
       JSON.stringify(tags), cuisine, meal_type, dietary, difficulty, id
-    ]);
+    ].map(val => val === undefined ? null : val));
 
     res.json({ success: true });
   } catch (error) {
     console.error('Error updating recipe:', error);
-    res.status(500).json({ error: 'Failed to update recipe' });
+    res.status(500).json({ error: "Échec de la mise à jour de la recette" });
   }
 });
 
@@ -249,7 +270,7 @@ app.delete('/api/recipes/:id', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Error deleting recipe:', error);
-    res.status(500).json({ error: 'Failed to delete recipe' });
+    res.status(500).json({ error: "Échec de la suppression de la recette" });
   }
 });
 
