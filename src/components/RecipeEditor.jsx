@@ -482,7 +482,7 @@ export default function RecipeEditor({ recipe, onChange }) {
           Utilisez les flèches <strong>▲</strong> et <strong>▼</strong> pour
           changer l'ordre.
         </p>
-        {recipe.ingredients.map((ing, idx) => (
+        {(recipe.ingredients || []).map((ing, idx) => (
           <div
             key={idx}
             className={`list-row ${
@@ -586,7 +586,7 @@ export default function RecipeEditor({ recipe, onChange }) {
           Utilisez les flèches <strong>▲</strong> et <strong>▼</strong> pour
           changer l'ordre.
         </p>
-        {recipe.steps.map((s, idx) => (
+        {(recipe.steps || []).map((s, idx) => (
           <div
             key={idx}
             className={`list-row ${dragOverIndex === idx ? "drag-over" : ""}`}

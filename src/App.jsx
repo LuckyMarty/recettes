@@ -91,8 +91,12 @@ export default function App() {
           prepTime: r.prep_time,
           cookTime: r.cook_time,
           createdAt: r.created_at,
-          updatedAt: r.updated_at
+          updatedAt: r.updated_at,
+          ingredients: Array.isArray(r.ingredients) ? r.ingredients : [],
+          steps: Array.isArray(r.steps) ? r.steps : [],
+          tags: Array.isArray(r.tags) ? r.tags : []
         }))
+
         setUsers([{ ...currentUser, recipes: mappedRecipes }])
         setAllRecipes(mappedRecipes)
         setSearchResults(mappedRecipes)
@@ -265,11 +269,10 @@ export default function App() {
       user_id: currentUser.id,
       prep_time: recipe.prepTime,
       cook_time: recipe.cookTime,
+      ingredients: recipe.ingredients.filter(ing => ing.trim() !== ''),
+      steps: recipe.steps.filter(step => step.trim() !== ''),
       updated_at: new Date().toISOString()
     }
-    // Remove the camelCase versions
-    delete recipeToSave.prepTime
-    delete recipeToSave.cookTime
 
     if (recipe.id) {
       // Update existing recipe
@@ -347,12 +350,17 @@ export default function App() {
 
   function loadRecipe(r) {
     if (!r) return
-    setRecipe(r)
+    setRecipe({
+      ...r,
+      ingredients: Array.isArray(r.ingredients) && r.ingredients.length > 0 ? r.ingredients : [''],
+      steps: Array.isArray(r.steps) && r.steps.length > 0 ? r.steps : [''],
+      tags: Array.isArray(r.tags) ? r.tags : []
+    })
     setShowProfile(false)
   }
 
   function createNew() {
-    setRecipe({ title: '', subtitle: '', servings: '', prepTime: '', cookTime: '', ingredients: [], steps: [], image: null, tags: [], createdAt: null, updatedAt: null })
+    setRecipe({ title: '', subtitle: '', servings: '', prepTime: '', cookTime: '', ingredients: [''], steps: [''], image: null, tags: [], createdAt: null, updatedAt: null })
     setShowProfile(false)
   }
 
@@ -467,7 +475,7 @@ export default function App() {
                   <button className="btn" onClick={() => setShowHelp((s) => !s)} title="Afficher / Masquer l'aide">
                     💡 {showHelp ? 'Masquer' : 'Aide'}
                   </button>
-                  <button className="btn" onClick={printRecipe} title="Ouvrir la boîte d'impression">🖨️ Imprimer</button>
+                  <button className="btn" onClick={() => printRecipe()} title="Ouvrir la boîte d'impression">🖨️ Imprimer</button>
                   <button className="btn" onClick={downloadPdf} title="Télécharger en PDF">📥 Télécharger PDF</button>
                   <button 
                     className="btn btn-primary" 

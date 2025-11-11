@@ -9,6 +9,7 @@ const PORT = process.env.PORT || 3001;
 
 // Helper function to safely parse JSON
 function safeJsonParse(str, defaultValue = []) {
+  if (Array.isArray(str)) return str;
   if (!str || str === 'undefined' || str === 'null') return defaultValue;
   try {
     return JSON.parse(str);
@@ -172,6 +173,8 @@ app.get('/api/users/:userId/recipes', async (req, res) => {
       [userId]
     );
 
+    console.log('Raw recipes from DB:', recipes.map(r => ({ id: r.id, ingredients: r.ingredients, steps: r.steps, tags: r.tags })))
+
     // Parse JSON fields
     const formattedRecipes = recipes.map(recipe => ({
       ...recipe,
@@ -179,6 +182,8 @@ app.get('/api/users/:userId/recipes', async (req, res) => {
       steps: safeJsonParse(recipe.steps),
       tags: safeJsonParse(recipe.tags)
     }));
+
+    console.log('Returning recipes with parsed data:', formattedRecipes.map(r => ({ id: r.id, ingredients: r.ingredients, steps: r.steps, tags: r.tags })))
 
     res.json(formattedRecipes);
   } catch (error) {

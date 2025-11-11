@@ -11,7 +11,7 @@ export default function RecipePreview({ recipe }) {
         <h2>{recipe.title}</h2>
         {recipe.tags && recipe.tags.length > 0 && (
           <div className="preview-tags" style={{marginTop:8}}>
-            {recipe.tags.map((t) => (
+            {(recipe.tags || []).map((t) => (
               <span key={t} className="tag-chip preview">{t}</span>
             ))}
           </div>
@@ -54,7 +54,7 @@ export default function RecipePreview({ recipe }) {
         <h3>Ingrédients</h3>
         <table className="ingredients-table" aria-label="Ingrédients">
           <tbody>
-            {recipe.ingredients.map((ing, i) => (
+            {(recipe.ingredients || []).map((ing, i) => (
               <tr key={i} className="ingredient-row">
                 <td className="ing-desc">{ing}</td>
               </tr>
@@ -67,7 +67,7 @@ export default function RecipePreview({ recipe }) {
         <h3>Étapes</h3>
         <table className="steps-table" aria-label="Étapes de la recette">
           <tbody>
-            {recipe.steps.map((s, i) => (
+            {(recipe.steps || []).map((s, i) => (
               <tr key={i} className="step-row">
                 <td className="step-num" aria-hidden>{i + 1}</td>
                 <td className="step-desc">{s}</td>

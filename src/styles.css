@@ -1056,6 +1056,23 @@ kbd{
   -webkit-filter: none !important;
 }
 
+/* Ensure nothing is semi-transparent when rendering PDF/print */
+.preview-wrapper.print-mode,
+.preview-wrapper.print-mode * {
+  opacity: 1 !important;
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+/* Hide app overlays and UI chrome that may sit above the preview during capture */
+.preview-wrapper.print-mode .auth-panel,
+.preview-wrapper.print-mode .toaster,
+.preview-wrapper.print-mode .Toastify,
+.preview-wrapper.print-mode .modal,
+.preview-wrapper.print-mode .overlay,
+.preview-wrapper.print-mode .btn, /* preserve buttons as plain text in print-mode */
+.preview-wrapper.print-mode .edit-controls { display: none !important; }
+
 
 /* Mobile / small screens: stack editor and preview, larger tap targets, full-width controls */
 @media (max-width: 900px) {
