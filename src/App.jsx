@@ -323,9 +323,17 @@ export default function App() {
     setShowProfile(false)
   }
 
-  function printRecipe() {
-    // Simple print — user can save as PDF from the print dialog
-    window.print()
+  function printRecipe(recipe = null) {
+    if (recipe) {
+      // If a specific recipe is provided, load it first
+      setRecipe(recipe)
+      setShowProfile(false)
+      // Wait a bit for the UI to update, then print
+      setTimeout(() => window.print(), 100)
+    } else {
+      // Print current recipe
+      window.print()
+    }
   }
 
   function downloadPdf() {
@@ -436,6 +444,7 @@ export default function App() {
                   onLoadRecipe={loadRecipe}
                   onDeleteRecipe={deleteRecipe}
                   onCreateNew={createNew}
+                  onPrintRecipe={printRecipe}
                   onSaveRecipe={saveCurrentRecipe}
                   onUpdateUser={(u) => { const next = users.map((x) => x.id === u.id ? u : x); persistUsers(next); setCurrentUser(u) }}
                 />
