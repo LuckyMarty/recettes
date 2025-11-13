@@ -1,0 +1,19 @@
+// ===========================
+// Variables CSS (root)
+// ===========================
+:root {
+  --gap: 20px;
+  --accent: #e67e50;
+  --accent-light: #fef3ed;
+  --muted: #666;
+  --text-muted: #777; // ajouté pour les dates
+  --bg-warm: #faf8f5;
+  --border: #e5dfd7;
+  --text-dark: #2c2416;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}

@@ -1,0 +1,220 @@
+// ===========================
+// Editor styles
+// ===========================
+.editor {
+  label {
+    display: block;
+    margin-bottom: 20px;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 17px;
+    margin-top: 8px;
+    transition: all 0.2s ease;
+    background: white;
+
+    &:focus {
+      @include focus-ring;
+    }
+
+    &::placeholder {
+      color: #999;
+      opacity: 1;
+      font-size: 16px;
+    }
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+    gap: 16px;
+    align-items: start;
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      .field-icon {
+        width: 20px;
+        height: 20px;
+        vertical-align: middle;
+        color: var(--accent);
+      }
+
+      input {
+        flex: 1;
+        background: white;
+        color: var(--text-dark);
+        border: 2px solid var(--border);
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 16px;
+
+        &:focus {
+          border-color: var(--accent);
+          box-shadow: 0 0 0 4px var(--accent-light);
+          outline: none;
+        }
+      }
+    }
+  }
+
+  section {
+    margin-top: 40px;
+    padding-top: 36px;
+    border-top: 2px solid var(--border);
+
+    &:first-of-type {
+      border-top: none;
+      padding-top: 0;
+    }
+
+    h3,
+    h4 {
+      font-size: 22px;
+      color: var(--accent);
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+  }
+}
+
+// List rows / steps
+.list-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+
+  input {
+    flex: 1;
+  }
+
+  textarea {
+    flex: 1;
+    min-height: 60px;
+  }
+
+  button {
+    background: #eee;
+    border: 2px solid #ddd;
+    padding: 8px 14px;
+    border-radius: 8px;
+  }
+
+  &.dragging {
+    opacity: 0.6;
+  }
+
+  &.drag-over {
+    outline: 3px dashed var(--accent);
+    background: var(--accent-light);
+  }
+
+  &[draggable],
+  &[draggable]:active {
+    cursor: default;
+  }
+}
+
+// Move buttons
+.step-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 8px;
+  gap: 8px;
+}
+
+.move-btn {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 2px solid var(--border);
+  background: var(--accent-light);
+  border-radius: 10px;
+  margin: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: bold;
+  color: var(--accent);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--accent);
+    color: white;
+    transform: scale(1.05);
+  }
+
+  &[disabled] {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+}
+
+.drag-handle {
+  display: none !important;
+}
+
+// Auto-resize fields
+.auto-resize {
+  overflow: hidden;
+  resize: none;
+  min-height: 60px;
+  padding: 14px 16px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.ingredient-input {
+  min-height: 60px;
+}
+
+// Image controls
+.image-controls {
+  input[type="file"] {
+    margin-bottom: 12px;
+    font-size: 16px;
+    display: block;
+  }
+}
+
+.editor button.btn-primary {
+  margin-top: 12px;
+}
+
+.image-wrap {
+  overflow: hidden;
+}
+
+.thumb {
+  width: 110px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  margin-right: 12px;
+}
+
+.image-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}

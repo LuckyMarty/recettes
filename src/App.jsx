@@ -26,6 +26,8 @@ export default function App() {
   const [allRecipes, setAllRecipes] = useState([]) // Store all recipes separately
   const [deleteConfirm, setDeleteConfirm] = useState(null) // { id, title } or null
   const [isGuest, setIsGuest] = useState(false) // Guest mode state
+  const [originalRecipe, setOriginalRecipe] = useState(null) // Track original recipe for unsaved changes detection
+  const [showBackConfirm, setShowBackConfirm] = useState(false) // Show confirmation when clicking back with unsaved changes
   const [recipe, setRecipe] = useState({
     title: 'Ma recette',
     subtitle: 'Une délicieuse recette à partager',
@@ -278,8 +280,11 @@ export default function App() {
       // Update existing recipe
       apiUpdateRecipe(recipe.id, recipeToSave)
         .then(() => {
-          loadUserRecipes() // Reload recipes
-          setShowProfile(true) // Switch to profile view
+          // Update the recipe in local state
+          const updatedRecipe = { ...recipe, updatedAt: new Date().toISOString() }
+          setAllRecipes(prev => prev.map(r => r.id === recipe.id ? updatedRecipe : r))
+          setSearchResults(prev => prev.map(r => r.id === recipe.id ? updatedRecipe : r))
+          setOriginalRecipe(updatedRecipe)
           toast.success('Recette mise à jour avec succès !')
         })
         .catch(error => {
@@ -291,9 +296,12 @@ export default function App() {
       recipeToSave.created_at = new Date().toISOString()
       apiCreateRecipe(recipeToSave)
         .then(result => {
-          setRecipe({ ...recipe, id: result.id })
-          loadUserRecipes() // Reload recipes
-          setShowProfile(true) // Switch to profile view
+          const savedRecipe = { ...recipe, id: result.id, createdAt: new Date().toISOString() }
+          setRecipe(savedRecipe)
+          // Add new recipe to local state
+          setAllRecipes(prev => [...prev, savedRecipe])
+          setSearchResults(prev => [...prev, savedRecipe])
+          setOriginalRecipe(savedRecipe)
           toast.success('Recette créée avec succès !')
         })
         .catch(error => {
@@ -326,7 +334,9 @@ export default function App() {
         error: 'Erreur lors de la suppression'
       }
     ).then(() => {
-      loadUserRecipes() // Reload recipes
+      // Remove recipe from local state immediately
+      setAllRecipes(prev => prev.filter(r => r.id !== id))
+      setSearchResults(prev => prev.filter(r => r.id !== id))
       // Clear editor if the deleted recipe was currently loaded
       if (recipe.id === id) {
         setRecipe({
@@ -342,6 +352,7 @@ export default function App() {
           createdAt: null,
           updatedAt: null
         })
+        setOriginalRecipe(null)
       }
     }).catch(error => {
       console.error('Failed to delete recipe:', error)
@@ -350,18 +361,50 @@ export default function App() {
 
   function loadRecipe(r) {
     if (!r) return
-    setRecipe({
+    const loadedRecipe = {
       ...r,
       ingredients: Array.isArray(r.ingredients) && r.ingredients.length > 0 ? r.ingredients : [''],
       steps: Array.isArray(r.steps) && r.steps.length > 0 ? r.steps : [''],
       tags: Array.isArray(r.tags) ? r.tags : []
-    })
+    }
+    setRecipe(loadedRecipe)
+    setOriginalRecipe(loadedRecipe)
     setShowProfile(false)
   }
 
   function createNew() {
-    setRecipe({ title: '', subtitle: '', servings: '', prepTime: '', cookTime: '', ingredients: [''], steps: [''], image: null, tags: [], createdAt: null, updatedAt: null })
+    const newRecipe = { title: '', subtitle: '', servings: '', prepTime: '', cookTime: '', ingredients: [''], steps: [''], image: null, tags: [], createdAt: null, updatedAt: null }
+    setRecipe(newRecipe)
+    setOriginalRecipe(newRecipe)
     setShowProfile(false)
+  }
+
+  function hasUnsavedChanges() {
+    if (!originalRecipe) return false
+    // Compare relevant fields, excluding timestamps and id
+    const current = {
+      title: recipe.title,
+      subtitle: recipe.subtitle,
+      servings: recipe.servings,
+      prepTime: recipe.prepTime,
+      cookTime: recipe.cookTime,
+      ingredients: recipe.ingredients,
+      steps: recipe.steps,
+      image: recipe.image,
+      tags: recipe.tags
+    }
+    const original = {
+      title: originalRecipe.title,
+      subtitle: originalRecipe.subtitle,
+      servings: originalRecipe.servings,
+      prepTime: originalRecipe.prepTime,
+      cookTime: originalRecipe.cookTime,
+      ingredients: originalRecipe.ingredients,
+      steps: originalRecipe.steps,
+      image: originalRecipe.image,
+      tags: originalRecipe.tags
+    }
+    return JSON.stringify(current) !== JSON.stringify(original)
   }
 
   function printRecipe(recipe = null) {
@@ -453,10 +496,14 @@ export default function App() {
             {!showProfile && (
               <div className="edit-header">
                 <button className="btn btn-ghost" onClick={() => {
-                  if (isGuest) {
-                    setIsGuest(false)
+                  if (hasUnsavedChanges()) {
+                    setShowBackConfirm(true)
                   } else {
-                    setShowProfile(true)
+                    if (isGuest) {
+                      setIsGuest(false)
+                    } else {
+                      setShowProfile(true)
+                    }
                   }
                 }} title={isGuest ? "Retour à l'accueil" : "Retour à la collection"}>
                   ← Retour
@@ -571,6 +618,54 @@ export default function App() {
       {showAuth && (
         <div style={{position:'fixed',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.3)'}}>
           <Auth onLogin={handleLogin} onSignup={handleSignup} onClose={() => setShowAuth(false)} />
+        </div>
+      )}
+      {showBackConfirm && (
+        <div style={{position:'fixed',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.3)',zIndex:1000}}>
+          <div style={{background:'white',padding:'20px',borderRadius:'8px',maxWidth:'400px',width:'90%'}}>
+            <h3 style={{margin:'0 0 16px 0',color:'#333'}}>Modifications non sauvegardées</h3>
+            <p style={{margin:'0 0 20px 0',color:'#666'}}>
+              Vous avez des modifications non sauvegardées. Que souhaitez-vous faire ?
+            </p>
+            <div style={{display:'flex',gap:'12px',justifyContent:'flex-end',flexWrap:'wrap'}}>
+              <button 
+                onClick={() => setShowBackConfirm(false)}
+                style={{padding:'8px 16px',border:'1px solid #ddd',borderRadius:'4px',background:'white',cursor:'pointer'}}
+              >
+                Annuler
+              </button>
+              <button 
+                onClick={() => {
+                  setShowBackConfirm(false)
+                  if (isGuest) {
+                    setIsGuest(false)
+                  } else {
+                    setShowProfile(true)
+                  }
+                }}
+                style={{padding:'8px 16px',border:'1px solid #ddd',borderRadius:'4px',background:'white',cursor:'pointer'}}
+              >
+                Abandonner les modifications
+              </button>
+              <button 
+                onClick={() => {
+                  setShowBackConfirm(false)
+                  saveCurrentRecipe()
+                  // After saving, navigate back
+                  setTimeout(() => {
+                    if (isGuest) {
+                      setIsGuest(false)
+                    } else {
+                      setShowProfile(true)
+                    }
+                  }, 100)
+                }}
+                style={{padding:'8px 16px',border:'none',borderRadius:'4px',background:'var(--accent)',color:'white',cursor:'pointer'}}
+              >
+                Sauvegarder et quitter
+              </button>
+            </div>
+          </div>
         </div>
       )}
       {deleteConfirm && (

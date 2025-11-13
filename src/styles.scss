@@ -1,0 +1,24 @@
+// Central stylesheet — imports SCSS partials for a modular architecture.
+// Keep this file as the single entry point used by the app (imported from JS).
+
+@import './scss/utils/variables';
+@import './scss/utils/mixins';
+@import './scss/base/base';
+@import './scss/layout/layout';
+@import './scss/pages/auth';
+@import './scss/pages/profile';
+@import './scss/components/buttons';
+@import './scss/components/editor';
+@import './scss/components/tags';
+@import './scss/components/help';
+@import './scss/preview/preview';
+@import './scss/print/print';
+@import './scss/responsive/responsive';
+
+/*
+  This file intentionally only contains imports. All styles are implemented
+  in partials under `src/scss/` (files prefixed with an underscore).
+
+  If you prefer the modern Sass module system, consider migrating these
+  `@import` statements to `@use`/`@forward` in a follow-up change.
+*/

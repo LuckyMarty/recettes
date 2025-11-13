@@ -1,0 +1,138 @@
+// ===========================
+// Preview & recipe card styles
+// ===========================
+.preview-wrapper {
+  padding: 32px 24px;
+  background: var(--bg-warm);
+  min-height: 100%;
+}
+
+.recipe-card {
+  max-width: 720px;
+  margin: 0 auto;
+  @include card-base;
+  padding: 40px;
+  position: relative;
+  animation: fadeIn 0.4s ease;
+
+  header {
+    h2 {
+      margin: 0;
+      font-size: 32px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+  }
+
+  &.has-image {
+    header {
+      padding-right: 180px;
+    }
+  }
+
+  .subtitle {
+    color: var(--muted);
+    margin-top: 8px;
+    font-size: 18px;
+    white-space: pre-wrap;
+  }
+
+  .meta {
+    display: flex;
+    gap: 20px;
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      background: var(--accent-light);
+      padding: 4px 8px;
+      border-radius: 24px;
+
+      strong {
+        margin-left: 4px;
+        color: var(--text-dark);
+        font-weight: 700;
+        font-size: 14px;
+      }
+    }
+  }
+
+  h3 {
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 12px;
+    font-size: 24px;
+    color: var(--accent);
+    margin-top: 40px;
+    font-weight: 700;
+  }
+
+  ul,
+  ol {
+    padding-left: 24px;
+  }
+
+  .recipe-image {
+    position: absolute;
+    top: 32px;
+    right: 32px;
+    width: 140px;
+    height: 140px;
+    object-fit: contain;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    background: #fff;
+    padding: 8px;
+  }
+
+  .print-note {
+    margin-top: 24px;
+    color: var(--muted);
+    font-size: 14px;
+    text-align: center;
+  }
+}
+
+// Ingredients & steps tables
+.ingredients-table {
+  @include table-base;
+
+  .ing-desc {
+    padding-left: 0;
+    white-space: pre-wrap;
+  }
+}
+
+.steps-table {
+  @include table-base;
+
+  .step-row + .step-row .step-desc {
+    border-top: 0;
+  }
+
+  .step-num {
+    width: 48px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-light);
+    border-right: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 16px;
+  }
+
+  .step-desc {
+    padding-left: 12px;
+    white-space: pre-wrap;
+  }
+}
+
+.print-help {
+  font-size: 15px;
+  color: var(--muted);
+  margin-top: 12px;
+}

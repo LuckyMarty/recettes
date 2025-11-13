@@ -1,0 +1,59 @@
+// ===========================
+// Button system
+// ===========================
+.btn {
+  @include button-base;
+
+  &.small {
+    padding: 10px 16px;
+    font-size: 15px;
+    min-height: 42px;
+    border-radius: var(--radius-md);
+  }
+
+  &.btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+
+    &:hover {
+      background: #d96d40;
+      border-color: #d96d40;
+    }
+
+    &[disabled] {
+      background: #ccc;
+      border-color: #ccc;
+      color: #888;
+    }
+  }
+
+  &.btn-secondary {
+    background: white;
+    color: var(--accent);
+    border-color: var(--accent);
+
+    &:hover {
+      background: var(--accent-light);
+    }
+  }
+
+  &.btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+
+    &:hover {
+      background: var(--bg-warm);
+    }
+  }
+
+  &.btn-icon {
+    width: 48px;
+    min-width: 48px;
+    height: 48px;
+    padding: 10px;
+    border-radius: var(--radius-md);
+    font-size: 20px;
+  }
+}

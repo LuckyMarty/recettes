@@ -1,0 +1,254 @@
+// ===========================
+// Print styles
+// ===========================
+@media print {
+  body * {
+    visibility: visible;
+  }
+
+  body {
+    background: white !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .left,
+  .app-header,
+  .buttons {
+    display: none;
+  }
+
+  .right {
+    width: 100%;
+    background: white !important;
+  }
+
+  .preview-wrapper {
+    background: white !important;
+  }
+
+  .recipe-card {
+    border: none;
+    box-shadow: none;
+    margin: 0.5cm;
+    padding: 8px;
+    background: white !important;
+    position: relative;
+    font-size: 10px !important;
+
+    header h2 {
+      font-size: 16px !important;
+    }
+
+    .subtitle {
+      font-size: 9px !important;
+    }
+
+    h3 {
+      font-size: 12px !important;
+    }
+  }
+
+  .meta-item strong,
+  .ingredients-table td,
+  .steps-table td {
+    font-size: 10px !important;
+  }
+
+  .meta-item {
+    background: white !important;
+    border: 1px solid #ddd;
+    font-size: 10px !important;
+  }
+
+  .step-num {
+    background: white !important;
+  }
+
+  .ingredients-table td,
+  .steps-table td {
+    padding: 4px 3px !important;
+    border-bottom: 2px solid #ccc;
+  }
+
+  .ingredients-table tr:last-child td,
+  .steps-table tr:last-child td {
+    border-bottom: none !important;
+  }
+
+  .tag-chip {
+    padding: 6px 10px !important;
+    gap: 6px !important;
+    border-radius: 12px !important;
+    font-size: 9px !important;
+  }
+
+  .mini-tag {
+    padding: 2px 6px !important;
+    font-size: 9px !important;
+  }
+
+  .app-header,
+  .btn,
+  .help-panel,
+  .recipe-image,
+  .thumb,
+  .list-row,
+  .tag-chip {
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    filter: none !important;
+  }
+
+  .btn,
+  .tag-chip {
+    background: white !important;
+    border-color: #ddd !important;
+  }
+
+  .print-help {
+    display: none;
+  }
+
+  .recipe-image {
+    position: absolute !important;
+    top: 8px !important;
+    right: 8px !important;
+    width: 150px !important;
+    height: 150px !important;
+    float: none !important;
+    display: block !important;
+  }
+
+  .recipe-card.has-image header {
+    padding-right: 100px !important;
+  }
+
+  @page {
+    margin: 0;
+    size: A4;
+  }
+}
+
+// Print-mode (html2pdf) – aligné avec print
+.preview-wrapper.print-mode {
+  background: white !important;
+
+  .auth-panel,
+  .toaster,
+  .Toastify,
+  .modal,
+  .overlay,
+  .app-header,
+  .buttons,
+  .left {
+    display: none !important;
+  }
+
+  .right {
+    width: 100%;
+    background: white !important;
+  }
+
+  .recipe-card {
+    border: none;
+    box-shadow: none;
+    margin: 0.5cm;
+    padding: 8px;
+    background: white !important;
+    position: relative;
+    font-size: 10px !important;
+
+    header h2 {
+      font-size: 16px !important;
+    }
+
+    .subtitle {
+      font-size: 9px !important;
+    }
+
+    h3 {
+      font-size: 12px !important;
+    }
+  }
+
+  .recipe-image {
+    position: absolute !important;
+    top: 8px !important;
+    right: 8px !important;
+    width: 150px !important;
+    height: 150px !important;
+    float: none !important;
+    display: block !important;
+  }
+
+  .recipe-card.has-image header {
+    padding-right: 100px !important;
+  }
+
+  .meta-item {
+    background: white !important;
+    border: 1px solid #ddd;
+    font-size: 10px !important;
+  }
+
+  .meta-item strong,
+  .ingredients-table td,
+  .steps-table td {
+    font-size: 10px !important;
+  }
+
+  .ingredients-table,
+  .steps-table {
+    td {
+      padding: 4px 3px !important;
+      border-bottom: 2px solid #ccc;
+    }
+
+    tr:last-child td {
+      border-bottom: none !important;
+    }
+  }
+
+  .tag-chip {
+    padding: 6px 10px !important;
+    gap: 6px !important;
+    border-radius: 12px !important;
+    font-size: 9px !important;
+    background: white !important;
+    border-color: #ddd !important;
+    box-shadow: none !important;
+  }
+
+  .mini-tag {
+    padding: 2px 6px !important;
+    font-size: 9px !important;
+  }
+
+  .btn {
+    background: white !important;
+    border-color: #ddd !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    padding: 6px 10px !important;
+    gap: 6px !important;
+    border-radius: 12px !important;
+    font-size: 10px !important;
+  }
+
+  .print-help {
+    display: none !important;
+  }
+
+  &,
+  *,
+  *::before,
+  *::after {
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    opacity: 1 !important;
+  }
+}

@@ -560,22 +560,6 @@ export default function RecipeEditor({ recipe, onChange }) {
           onClick={addIngredient}
           title="Ajouter un ingrédient"
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden
-          >
-            <path
-              d="M12 5v14M5 12h14"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
           ➕ Ajouter un ingrédient
         </button>
       </section>
@@ -659,22 +643,6 @@ export default function RecipeEditor({ recipe, onChange }) {
           onClick={addStep}
           title="Ajouter une étape"
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden
-          >
-            <path
-              d="M12 5v14M5 12h14"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
           ➕ Ajouter une étape
         </button>
       </section>

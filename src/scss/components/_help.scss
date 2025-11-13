@@ -1,0 +1,48 @@
+// ===========================
+// Help panel
+// ===========================
+.help-panel {
+  background: var(--accent-light);
+  border: 3px solid var(--accent);
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-md);
+  animation: fadeIn 0.3s ease;
+
+  strong {
+    display: block;
+    margin-bottom: 12px;
+    font-size: 20px;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  ul {
+    margin: 12px 0;
+    padding-left: 24px;
+    font-size: 16px;
+
+    li {
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+  }
+}
+
+.muted-text {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
+kbd {
+  background: #fff;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 14px;
+  font-family: monospace;
+  font-weight: 600;
+}

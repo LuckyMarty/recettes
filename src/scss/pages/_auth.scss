@@ -1,0 +1,89 @@
+// ===========================
+// Auth panel styles
+// ===========================
+.auth-panel {
+  max-width: 420px;
+  width: 100%;
+  padding: 48px 40px;
+  background: white;
+  border: 3px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+
+  .auth-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .auth-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 0 0 12px;
+  }
+
+  .auth-subtitle {
+    font-size: 17px;
+    color: var(--muted);
+    margin: 0 0 32px;
+  }
+
+  .auth-form {
+    text-align: left;
+  }
+
+  .form-group {
+    margin-bottom: 24px;
+
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 8px;
+      color: var(--text-dark);
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 17px;
+      transition: all 0.2s ease;
+      background: white;
+
+      &:focus {
+        @include focus-ring;
+      }
+    }
+  }
+
+  .btn-block {
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .auth-switch {
+    margin-top: 24px;
+    font-size: 16px;
+    color: var(--muted);
+  }
+
+  .link-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0 4px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      color: #d96d40;
+    }
+  }
+}

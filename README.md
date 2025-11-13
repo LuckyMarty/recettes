@@ -10,6 +10,23 @@ A comprehensive recipe creation and management application with user authenticat
 - Recipe sorting (by title, date created/updated)
 - PDF export functionality
 - Responsive design with mobile support
+
+SCSS architecture
+-----------------
+
+This project uses a modular SCSS architecture. The single entry point is `src/styles.scss` which imports the partials located in `src/scss/`.
+
+- Place feature-specific styles in partials named with a leading underscore, e.g. `src/scss/_buttons.scss`, `_print.scss`, `_layout.scss`, `_variables.scss`, `_mixins.scss`, etc.
+- `src/styles.scss` imports these partials in a controlled order (variables, mixins, base, layout, components, utilities, responsive, ...).
+- Currently the project uses the legacy `@import` statements for compatibility, but Dart Sass recommends migrating to `@use`/`@forward` in the future.
+
+How to add a new partial:
+
+1. Create `src/scss/_yourfeature.scss`.
+2. Add your SCSS rules there.
+3. Add an import line in `src/styles.scss`, e.g. `@import './scss/yourfeature';` (no underscore and no `.scss` extension).
+
+This keeps styles modular and makes it easier to maintain and test components.
 - Theme customization
 - Drag-and-drop ingredient and step reordering
 
