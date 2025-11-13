@@ -6,6 +6,7 @@ import Auth from './components/Auth.jsx'
 import Profile from './components/Profile.jsx'
 import SearchBar from './components/SearchBar.jsx'
 import toast, { Toaster } from 'react-hot-toast'
+import Tutorial from './components/Tutorial.jsx'
 
 export default function App() {
   const [showHelp, setShowHelp] = useState(false)
@@ -526,6 +527,7 @@ export default function App() {
                   <button className="btn" onClick={downloadPdf} title="Télécharger en PDF">📥 Télécharger PDF</button>
                   <button 
                     className="btn btn-primary" 
+                    data-tutorial="save"
                     onClick={saveCurrentRecipe} 
                     title={isGuest ? "Connectez-vous pour sauvegarder" : "Enregistrer la recette"}
                     disabled={isGuest}
@@ -591,15 +593,7 @@ export default function App() {
               ) : (
                 <>
                   {showHelp && (
-                    <div className="help-panel">
-                      <strong>📖 Comment utiliser ce créateur de recettes ?</strong>
-                      <ul>
-                        <li className="muted-text">✍️ Remplissez votre recette à gauche, elle apparaît en direct à droite</li>
-                        <li className="muted-text">🔼🔽 Utilisez les flèches <strong>▲</strong> et <strong>▼</strong> pour déplacer les ingrédients et les étapes</li>
-                        <li className="muted-text">📥 Cliquez sur «Télécharger PDF» pour sauvegarder votre recette</li>
-                        <li className="muted-text">📷 Ajoutez une photo pour la voir dans votre recette</li>
-                      </ul>
-                    </div>
+                    <Tutorial onClose={() => setShowHelp(false)} />
                   )}
                   <RecipeEditor recipe={recipe} onChange={handleChange} />
                 </>
@@ -607,7 +601,7 @@ export default function App() {
             </section>
             {!showProfile && (
               <section className="right">
-                <div ref={previewRef} className="preview-wrapper">
+                <div ref={previewRef} data-tutorial="preview" className="preview-wrapper">
                   <RecipePreview recipe={recipe} />
                 </div>
               </section>

@@ -264,9 +264,10 @@ export default function RecipeEditor({ recipe, onChange }) {
   return (
     <div className="editor">
       <section>
-        <h3>
+          <h3>
           📝 Nom de la recette
           <input
+            data-tutorial="title"
             value={recipe.title}
             onChange={(e) => updateField("title", e.target.value)}
             placeholder="ex: Tarte aux pommes"
@@ -460,7 +461,7 @@ export default function RecipeEditor({ recipe, onChange }) {
       <section>
         <h3>📷 Photo de la recette</h3>
         <div className="image-controls">
-          <input type="file" accept="image/*" onChange={handleImageFile} />
+          <input data-tutorial="image" type="file" accept="image/*" onChange={handleImageFile} />
           {recipe.image && (
             <div className="image-preview-row">
               <img src={recipe.image} alt="Aperçu" className="thumb" />

@@ -1,0 +1,55 @@
+/* Tutorial pointers and overlay */
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 1200;
+}
+
+.tutorial-highlight {
+  border: 3px solid var(--accent);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  z-index: 1202;
+  pointer-events: none;
+}
+
+.tutorial-panel {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: 560px;
+  background: var(--accent-light);
+  border: 3px solid var(--accent);
+  padding: 18px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  z-index: 1203;
+}
+
+.tutorial-tooltip {
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 1204;
+  pointer-events: none;
+}
+
+.tutorial-tooltip.top .tutorial-arrow {
+  width: 18px;
+  height: 18px;
+  background: var(--accent);
+  transform: translateY(-50%) rotate(45deg);
+  margin: 0 auto;
+}
+
+.tutorial-tooltip.bottom .tutorial-arrow {
+  width: 18px;
+  height: 18px;
+  background: var(--accent);
+  transform: translateY(50%) rotate(45deg);
+  margin: 0 auto;
+}
+
+.tutorial-arrow {
+  border-radius: 2px;
+}
