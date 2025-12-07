@@ -281,15 +281,6 @@ export default function RecipeEditor({ recipe, onChange, globalPrintDefaults, se
             placeholder="ex: Tarte aux pommes"
             style={{flex: 1}}
           />
-          <button
-            type="button"
-            className="btn small btn-ghost"
-            onClick={() => onViewRecipe && onViewRecipe(recipe)}
-            title="Lire la recette"
-            style={{whiteSpace: 'nowrap'}}
-          >
-            👁️ Lire
-          </button>
         </h3>
       </section>
       {/* Tags - moved under title */}
