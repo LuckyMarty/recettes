@@ -9,7 +9,8 @@ export default function RecipePreview({ recipe, globalPrintDefaults }) {
     paddingTop: print.marginTop != null ? `${print.marginTop}${unit}` : undefined,
     paddingBottom: print.marginBottom != null ? `${print.marginBottom}${unit}` : undefined,
     paddingLeft: print.marginLeft != null ? `${print.marginLeft}${unit}` : undefined,
-    paddingRight: print.marginRight != null ? `${print.marginRight}${unit}` : undefined
+    paddingRight: print.marginRight != null ? `${print.marginRight}${unit}` : undefined,
+    borderRadius: 0,
   }
   const titleStyle = { fontSize: print.titleFontSize ? `${print.titleFontSize}px` : undefined }
   const subtitleStyle = { fontSize: print.subtitleFontSize ? `${print.subtitleFontSize}px` : undefined }

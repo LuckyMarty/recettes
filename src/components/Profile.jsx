@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 
-export default function Profile({ user, searchResults, searchQuery, onLogout, onLoadRecipe, onDeleteRecipe, onCreateNew, onPrintRecipe, onSaveRecipe, onUpdateUser }) {
+export default function Profile({ user, searchResults, searchQuery, onLoadRecipe, onDeleteRecipe, onCreateNew, onViewRecipe, onUpdateUser }) {
   const [folderName, setFolderName] = useState('')
-  const [selectedFolder, setSelectedFolder] = useState(null)
   const [sortBy, setSortBy] = useState('created-desc') // 'created-desc', 'created-asc', 'updated-desc', 'updated-asc', 'title-asc', 'title-desc'
 
   if (!user) return null
@@ -110,11 +109,11 @@ export default function Profile({ user, searchResults, searchQuery, onLogout, on
                     )}
                   </div>
                   <div className="recipe-card-actions">
+                    <button className="btn small btn-ghost" onClick={() => onViewRecipe && onViewRecipe(r)} title="Lire la recette">
+                      👁️ Lire
+                    </button>
                     <button className="btn small btn-primary" onClick={() => onLoadRecipe(r)}>
                       ✏️ Modifier
-                    </button>
-                    <button className="btn small btn-secondary" onClick={() => onPrintRecipe(r)}>
-                      🖨️ Imprimer
                     </button>
                     <button className="btn small btn-ghost" onClick={() => onDeleteRecipe(r.id)}>
                       🗑️

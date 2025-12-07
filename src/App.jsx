@@ -7,6 +7,7 @@ import Profile from './components/Profile.jsx'
 import SearchBar from './components/SearchBar.jsx'
 import toast, { Toaster } from 'react-hot-toast'
 import Tutorial from './components/Tutorial.jsx'
+import RecipePage from './Recipe.jsx'
 
 export default function App() {
   const [showHelp, setShowHelp] = useState(false)
@@ -22,6 +23,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null)
   const [showAuth, setShowAuth] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
+  const [standaloneRecipe, setStandaloneRecipe] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [loadingRecipes, setLoadingRecipes] = useState(false)
   const [allRecipes, setAllRecipes] = useState([]) // Store all recipes separately
@@ -522,6 +524,12 @@ export default function App() {
             {!showProfile && (
               <div className="edit-header">
                 <button className="btn btn-ghost" onClick={() => {
+                  // If viewing standalone recipe, close it first
+                  if (standaloneRecipe) {
+                    setStandaloneRecipe(null)
+                    setShowProfile(true)
+                    return
+                  }
                   if (hasUnsavedChanges()) {
                     setShowBackConfirm(true)
                   } else {
@@ -534,32 +542,35 @@ export default function App() {
                 }} title={isGuest ? "Retour à l'accueil" : "Retour à la collection"}>
                   ← Retour
                 </button>
-                <div className="edit-controls">
-                  <div className="theme-picker">
-                    <label style={{fontSize: '15px', marginRight: '8px', fontWeight: '600'}}>🎨 Couleur:</label>
-                    <select value={theme} onChange={(e) => setTheme(e.target.value)} className="theme-select">
-                      <option value="orange">🧡 Orange</option>
-                      <option value="blue">💙 Bleu</option>
-                      <option value="green">💚 Vert</option>
-                      <option value="purple">💜 Violet</option>
-                      <option value="pink">💗 Rose</option>
-                    </select>
+                {/* When showing a standalone recipe, hide header controls for a minimal read-only view */}
+                {!standaloneRecipe && (
+                  <div className="edit-controls">
+                    <div className="theme-picker">
+                      <label style={{fontSize: '15px', marginRight: '8px', fontWeight: '600'}}>🎨 Couleur:</label>
+                      <select value={theme} onChange={(e) => setTheme(e.target.value)} className="theme-select">
+                        <option value="orange">🧡 Orange</option>
+                        <option value="blue">💙 Bleu</option>
+                        <option value="green">💚 Vert</option>
+                        <option value="purple">💜 Violet</option>
+                        <option value="pink">💗 Rose</option>
+                      </select>
+                    </div>
+                    <button className="btn" onClick={() => setShowHelp((s) => !s)} title="Afficher / Masquer l'aide">
+                      💡 {showHelp ? 'Masquer' : 'Aide'}
+                    </button>
+                    <button className="btn" onClick={() => printRecipe()} title="Ouvrir la boîte d'impression">🖨️ Imprimer</button>
+                    <button className="btn" onClick={downloadPdf} title="Télécharger en PDF">📥 Télécharger PDF</button>
+                    <button 
+                      className="btn btn-primary" 
+                      data-tutorial="save"
+                      onClick={saveCurrentRecipe} 
+                      title={isGuest ? "Connectez-vous pour sauvegarder" : "Enregistrer la recette"}
+                      disabled={isGuest}
+                    >
+                      💾 {isGuest ? 'Connexion requise' : 'Enregistrer'}
+                    </button>
                   </div>
-                  <button className="btn" onClick={() => setShowHelp((s) => !s)} title="Afficher / Masquer l'aide">
-                    💡 {showHelp ? 'Masquer' : 'Aide'}
-                  </button>
-                  <button className="btn" onClick={() => printRecipe()} title="Ouvrir la boîte d'impression">🖨️ Imprimer</button>
-                  <button className="btn" onClick={downloadPdf} title="Télécharger en PDF">📥 Télécharger PDF</button>
-                  <button 
-                    className="btn btn-primary" 
-                    data-tutorial="save"
-                    onClick={saveCurrentRecipe} 
-                    title={isGuest ? "Connectez-vous pour sauvegarder" : "Enregistrer la recette"}
-                    disabled={isGuest}
-                  >
-                    💾 {isGuest ? 'Connexion requise' : 'Enregistrer'}
-                  </button>
-                </div>
+                )}
               </div>
             )}
             {showProfile && (
@@ -600,84 +611,93 @@ export default function App() {
             </div>
           )}
 
-          <main className={showProfile ? "full-profile" : "split"}>
-            <section className="left" style={showProfile ? { width: '100%' } : {}}>
-              {showProfile && !isGuest ? (
-                <Profile
-                  user={currentUser}
-                  searchResults={searchResults}
-                  searchQuery={searchQuery}
-                  onLogout={handleLogout}
-                  onLoadRecipe={loadRecipe}
-                  onDeleteRecipe={deleteRecipe}
-                  onCreateNew={createNew}
-                  onPrintRecipe={printRecipe}
-                  onSaveRecipe={saveCurrentRecipe}
-                  onUpdateUser={(u) => { const next = users.map((x) => x.id === u.id ? u : x); persistUsers(next); setCurrentUser(u) }}
-                />
-              ) : (
-                <>
-                  {showHelp && (
-                    <Tutorial onClose={() => setShowHelp(false)} />
-                  )}
-                  <RecipeEditor
-                    recipe={recipe}
-                    onChange={handleChange}
-                    globalPrintDefaults={globalPrintDefaults}
-                    setGlobalPrintDefaults={setGlobalPrintDefaults}
-                  />
-                </>
-              )}
-            </section>
-            {!showProfile && (
-              <section className="right">
-                    {/* Apply CSS variables from recipe.print so live preview and print-mode can read them */}
-                <div
-                  ref={previewRef}
-                  data-tutorial="preview"
-                  className="preview-wrapper"
-                  style={{
-                    // Use recipe.print if present, otherwise fall back to globalPrintDefaults
-                    ...( (() => {
-                      const merged = recipe.print || globalPrintDefaults || {}
-                      const unit = merged.marginUnit || 'mm'
-                      const title = merged.titleFontSize != null ? `${merged.titleFontSize}px` : undefined
-                      const subtitle = merged.subtitleFontSize != null ? `${merged.subtitleFontSize}px` : undefined
-                      const body = merged.bodyFontSize != null ? `${merged.bodyFontSize}px` : undefined
-                      const categories = merged.categoriesFontSize != null ? `${merged.categoriesFontSize}px` : undefined
-                      const meta = merged.metaFontSize != null ? `${merged.metaFontSize}px` : undefined
-                      const ingTitle = merged.ingredientsTitleFontSize != null ? `${merged.ingredientsTitleFontSize}px` : undefined
-                      const ingBodyVal = merged.ingredientsBodyFontSize != null ? merged.ingredientsBodyFontSize : merged.ingredientsFontSize
-                      const ingBody = ingBodyVal != null ? `${ingBodyVal}px` : undefined
-                      const stepTitle = merged.stepsTitleFontSize != null ? `${merged.stepsTitleFontSize}px` : undefined
-                      const stepBodyVal = merged.stepsBodyFontSize != null ? merged.stepsBodyFontSize : merged.stepsFontSize
-                      const stepBody = stepBodyVal != null ? `${stepBodyVal}px` : undefined
-                      const stepNumber = merged.stepNumberFontSize != null ? `${merged.stepNumberFontSize}px` : undefined
-
-                      return {
-                        '--print-title-font-size': title,
-                        '--print-subtitle-font-size': subtitle,
-                        '--print-body-font-size': body,
-                        '--print-categories-font-size': categories,
-                        '--print-meta-font-size': meta,
-                        '--print-ingredients-title-font-size': ingTitle,
-                        '--print-ingredients-font-size': ingBody,
-                        '--print-steps-title-font-size': stepTitle,
-                        '--print-steps-font-size': stepBody,
-                        '--print-step-number-font-size': stepNumber,
-                        '--print-margin-top': (merged.marginTop != null ? String(merged.marginTop) + unit : undefined),
-                        '--print-margin-bottom': (merged.marginBottom != null ? String(merged.marginBottom) + unit : undefined),
-                        '--print-margin-left': (merged.marginLeft != null ? String(merged.marginLeft) + unit : undefined),
-                        '--print-margin-right': (merged.marginRight != null ? String(merged.marginRight) + unit : undefined)
-                      }
-                    })() )
-                  }}
-                >
-                  <RecipePreview recipe={recipe} globalPrintDefaults={globalPrintDefaults} />
-                </div>
+          {standaloneRecipe ? (
+            <main className="standalone-recipe">
+              <section style={{ width: '100%' }}>
+                <RecipePage recipe={standaloneRecipe} />
               </section>
-            )}
-          </main>
+            </main>
+          ) : (
+            <main className={showProfile ? "full-profile" : "split"}>
+              <section className="left" style={showProfile ? { width: '100%' } : {}}>
+                {showProfile && !isGuest ? (
+                  <Profile
+                    user={currentUser}
+                    searchResults={searchResults}
+                    searchQuery={searchQuery}
+                    onLogout={handleLogout}
+                    onLoadRecipe={loadRecipe}
+                    onDeleteRecipe={deleteRecipe}
+                    onCreateNew={createNew}
+                    onPrintRecipe={printRecipe}
+                    onSaveRecipe={saveCurrentRecipe}
+                    onUpdateUser={(u) => { const next = users.map((x) => x.id === u.id ? u : x); persistUsers(next); setCurrentUser(u) }}
+                    onViewRecipe={(r) => { setStandaloneRecipe(r); setShowProfile(false) }}
+                  />
+                ) : (
+                  <>
+                    {showHelp && (
+                      <Tutorial onClose={() => setShowHelp(false)} />
+                    )}
+                    <RecipeEditor
+                      recipe={recipe}
+                      onChange={handleChange}
+                      globalPrintDefaults={globalPrintDefaults}
+                      setGlobalPrintDefaults={setGlobalPrintDefaults}
+                    />
+                  </>
+                )}
+              </section>
+              {!showProfile && (
+                <section className="right">
+                      {/* Apply CSS variables from recipe.print so live preview and print-mode can read them */}
+                  <div
+                    ref={previewRef}
+                    data-tutorial="preview"
+                    className="preview-wrapper"
+                    style={{
+                      // Use recipe.print if present, otherwise fall back to globalPrintDefaults
+                      ...( (() => {
+                        const merged = recipe.print || globalPrintDefaults || {}
+                        const unit = merged.marginUnit || 'mm'
+                        const title = merged.titleFontSize != null ? `${merged.titleFontSize}px` : undefined
+                        const subtitle = merged.subtitleFontSize != null ? `${merged.subtitleFontSize}px` : undefined
+                        const body = merged.bodyFontSize != null ? `${merged.bodyFontSize}px` : undefined
+                        const categories = merged.categoriesFontSize != null ? `${merged.categoriesFontSize}px` : undefined
+                        const meta = merged.metaFontSize != null ? `${merged.metaFontSize}px` : undefined
+                        const ingTitle = merged.ingredientsTitleFontSize != null ? `${merged.ingredientsTitleFontSize}px` : undefined
+                        const ingBodyVal = merged.ingredientsBodyFontSize != null ? merged.ingredientsBodyFontSize : merged.ingredientsFontSize
+                        const ingBody = ingBodyVal != null ? `${ingBodyVal}px` : undefined
+                        const stepTitle = merged.stepsTitleFontSize != null ? `${merged.stepsTitleFontSize}px` : undefined
+                        const stepBodyVal = merged.stepsBodyFontSize != null ? merged.stepsBodyFontSize : merged.stepsFontSize
+                        const stepBody = stepBodyVal != null ? `${stepBodyVal}px` : undefined
+                        const stepNumber = merged.stepNumberFontSize != null ? `${merged.stepNumberFontSize}px` : undefined
+
+                        return {
+                          '--print-title-font-size': title,
+                          '--print-subtitle-font-size': subtitle,
+                          '--print-body-font-size': body,
+                          '--print-categories-font-size': categories,
+                          '--print-meta-font-size': meta,
+                          '--print-ingredients-title-font-size': ingTitle,
+                          '--print-ingredients-font-size': ingBody,
+                          '--print-steps-title-font-size': stepTitle,
+                          '--print-steps-font-size': stepBody,
+                          '--print-step-number-font-size': stepNumber,
+                          '--print-margin-top': (merged.marginTop != null ? String(merged.marginTop) + unit : undefined),
+                          '--print-margin-bottom': (merged.marginBottom != null ? String(merged.marginBottom) + unit : undefined),
+                          '--print-margin-left': (merged.marginLeft != null ? String(merged.marginLeft) + unit : undefined),
+                          '--print-margin-right': (merged.marginRight != null ? String(merged.marginRight) + unit : undefined)
+                        }
+                      })() )
+                    }}
+                  >
+                    <RecipePreview recipe={recipe} globalPrintDefaults={globalPrintDefaults} />
+                  </div>
+                </section>
+              )}
+            </main>
+          )}
         </>
       )}
       {showAuth && (
