@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
+import toast from 'react-hot-toast'
 
-export default function RecipeEditor({ recipe, onChange }) {
+export default function RecipeEditor({ recipe, onChange, globalPrintDefaults, setGlobalPrintDefaults }) {
   function updateField(key, value) {
     onChange({ [key]: value });
   }
@@ -662,6 +663,28 @@ export default function RecipeEditor({ recipe, onChange }) {
         </p>
 
         <div className="print-settings">
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+            <div style={{fontSize:14,color:'var(--text-dark)'}}>Options globales</div>
+            <div>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  const next = { ...(globalPrintDefaults || {}), ...(recipe.print || {}) }
+                  try {
+                    setGlobalPrintDefaults(next)
+                    toast.success("🔖 Réglages d'impression enregistrés comme défauts")
+                  } catch (e) {
+                    console.error('Failed to save global print defaults', e)
+                    toast.error("Erreur : impossible d'enregistrer les réglages")
+                  }
+                }}
+                title="Enregistrer les réglages d'impression actuels comme valeurs par défaut pour les nouvelles recettes"
+              >
+                💾 Enregistrer comme défaut
+              </button>
+            </div>
+          </div>
           {/* Marges Section */}
           <div className="print-section">
             <h4 className="print-section-title">📏 Marges de la page</h4>
@@ -669,7 +692,7 @@ export default function RecipeEditor({ recipe, onChange }) {
               <label className="inline-label">
                 <span>Unité de mesure</span>
                 <select
-                  value={recipe.print?.marginUnit ?? "mm"}
+                  value={recipe.print?.marginUnit ?? globalPrintDefaults?.marginUnit ?? "mm"}
                   onChange={(e) => updatePrintField("marginUnit", e.target.value)}
                   style={{width: 'auto', minWidth: '100px'}}
                 >
@@ -686,9 +709,9 @@ export default function RecipeEditor({ recipe, onChange }) {
                   type="number"
                   min="0"
                   step="0.5"
-                  value={recipe.print?.marginTop ?? 10}
+                  value={recipe.print?.marginTop ?? globalPrintDefaults?.marginTop ?? 10}
                   onChange={(e) => updatePrintField("marginTop", Number(e.target.value))}
-                  placeholder={`10 ${recipe.print?.marginUnit ?? "mm"}`}
+                  placeholder={`10 ${recipe.print?.marginUnit ?? globalPrintDefaults?.marginUnit ?? "mm"}`}
                 />
               </label>
               <label>
@@ -697,9 +720,9 @@ export default function RecipeEditor({ recipe, onChange }) {
                   type="number"
                   min="0"
                   step="0.5"
-                  value={recipe.print?.marginBottom ?? 10}
+                  value={recipe.print?.marginBottom ?? globalPrintDefaults?.marginBottom ?? 10}
                   onChange={(e) => updatePrintField("marginBottom", Number(e.target.value))}
-                  placeholder={`10 ${recipe.print?.marginUnit ?? "mm"}`}
+                  placeholder={`10 ${recipe.print?.marginUnit ?? globalPrintDefaults?.marginUnit ?? "mm"}`}
                 />
               </label>
               <label>
@@ -708,9 +731,9 @@ export default function RecipeEditor({ recipe, onChange }) {
                   type="number"
                   min="0"
                   step="0.5"
-                  value={recipe.print?.marginLeft ?? 10}
+                  value={recipe.print?.marginLeft ?? globalPrintDefaults?.marginLeft ?? 10}
                   onChange={(e) => updatePrintField("marginLeft", Number(e.target.value))}
-                  placeholder={`10 ${recipe.print?.marginUnit ?? "mm"}`}
+                  placeholder={`10 ${recipe.print?.marginUnit ?? globalPrintDefaults?.marginUnit ?? "mm"}`}
                 />
               </label>
               <label>
@@ -719,9 +742,9 @@ export default function RecipeEditor({ recipe, onChange }) {
                   type="number"
                   min="0"
                   step="0.5"
-                  value={recipe.print?.marginRight ?? 10}
+                  value={recipe.print?.marginRight ?? globalPrintDefaults?.marginRight ?? 10}
                   onChange={(e) => updatePrintField("marginRight", Number(e.target.value))}
-                  placeholder={`10 ${recipe.print?.marginUnit ?? "mm"}`}
+                  placeholder={`10 ${recipe.print?.marginUnit ?? globalPrintDefaults?.marginUnit ?? "mm"}`}
                 />
               </label>
             </div>
@@ -741,7 +764,7 @@ export default function RecipeEditor({ recipe, onChange }) {
                     type="number"
                     min="6"
                     max="72"
-                    value={recipe.print?.titleFontSize ?? 20}
+                    value={recipe.print?.titleFontSize ?? globalPrintDefaults?.titleFontSize ?? 20}
                     onChange={(e) => updatePrintField("titleFontSize", Number(e.target.value))}
                     placeholder="20 px"
                   />
@@ -752,7 +775,7 @@ export default function RecipeEditor({ recipe, onChange }) {
                     type="number"
                     min="6"
                     max="72"
-                    value={recipe.print?.subtitleFontSize ?? 14}
+                    value={recipe.print?.subtitleFontSize ?? globalPrintDefaults?.subtitleFontSize ?? 14}
                     onChange={(e) => updatePrintField("subtitleFontSize", Number(e.target.value))}
                     placeholder="14 px"
                   />
@@ -763,7 +786,7 @@ export default function RecipeEditor({ recipe, onChange }) {
                     type="number"
                     min="6"
                     max="72"
-                    value={recipe.print?.categoriesFontSize ?? 12}
+                    value={recipe.print?.categoriesFontSize ?? globalPrintDefaults?.categoriesFontSize ?? 12}
                     onChange={(e) => updatePrintField("categoriesFontSize", Number(e.target.value))}
                     placeholder="12 px"
                   />
@@ -774,7 +797,7 @@ export default function RecipeEditor({ recipe, onChange }) {
                     type="number"
                     min="6"
                     max="72"
-                    value={recipe.print?.metaFontSize ?? 13}
+                    value={recipe.print?.metaFontSize ?? globalPrintDefaults?.metaFontSize ?? 13}
                     onChange={(e) => updatePrintField("metaFontSize", Number(e.target.value))}
                     placeholder="13 px"
                   />
@@ -788,13 +811,13 @@ export default function RecipeEditor({ recipe, onChange }) {
                 <label>
                   Titre "Ingrédients"
                   <input
-                    type="number"
-                    min="6"
-                    max="72"
-                    value={recipe.print?.ingredientsTitleFontSize ?? 16}
-                    onChange={(e) => updatePrintField("ingredientsTitleFontSize", Number(e.target.value))}
-                    placeholder="16 px"
-                  />
+                      type="number"
+                      min="6"
+                      max="72"
+                      value={recipe.print?.ingredientsTitleFontSize ?? globalPrintDefaults?.ingredientsTitleFontSize ?? 16}
+                      onChange={(e) => updatePrintField("ingredientsTitleFontSize", Number(e.target.value))}
+                      placeholder="16 px"
+                    />
                 </label>
                 <label>
                   Liste des ingrédients
@@ -802,8 +825,8 @@ export default function RecipeEditor({ recipe, onChange }) {
                     type="number"
                     min="6"
                     max="72"
-                    value={recipe.print?.ingredientsBodyFontSize ?? recipe.print?.ingredientsFontSize ?? 12}
-                    onChange={(e) => updatePrintField("ingredientsBodyFontSize", Number(e.target.value))}
+                      value={recipe.print?.ingredientsBodyFontSize ?? recipe.print?.ingredientsFontSize ?? globalPrintDefaults?.ingredientsBodyFontSize ?? globalPrintDefaults?.ingredientsFontSize ?? 12}
+                      onChange={(e) => updatePrintField("ingredientsBodyFontSize", Number(e.target.value))}
                     placeholder="12 px"
                   />
                 </label>
@@ -816,13 +839,13 @@ export default function RecipeEditor({ recipe, onChange }) {
                 <label>
                   Titre "Préparation"
                   <input
-                    type="number"
-                    min="6"
-                    max="72"
-                    value={recipe.print?.stepsTitleFontSize ?? 16}
-                    onChange={(e) => updatePrintField("stepsTitleFontSize", Number(e.target.value))}
-                    placeholder="16 px"
-                  />
+                      type="number"
+                      min="6"
+                      max="72"
+                      value={recipe.print?.stepsTitleFontSize ?? globalPrintDefaults?.stepsTitleFontSize ?? 16}
+                      onChange={(e) => updatePrintField("stepsTitleFontSize", Number(e.target.value))}
+                      placeholder="16 px"
+                    />
                 </label>
                 <label>
                   Texte des étapes
@@ -830,8 +853,8 @@ export default function RecipeEditor({ recipe, onChange }) {
                     type="number"
                     min="6"
                     max="72"
-                    value={recipe.print?.stepsBodyFontSize ?? recipe.print?.stepsFontSize ?? 12}
-                    onChange={(e) => updatePrintField("stepsBodyFontSize", Number(e.target.value))}
+                      value={recipe.print?.stepsBodyFontSize ?? recipe.print?.stepsFontSize ?? globalPrintDefaults?.stepsBodyFontSize ?? globalPrintDefaults?.stepsFontSize ?? 12}
+                      onChange={(e) => updatePrintField("stepsBodyFontSize", Number(e.target.value))}
                     placeholder="12 px"
                   />
                 </label>
@@ -841,8 +864,8 @@ export default function RecipeEditor({ recipe, onChange }) {
                     type="number"
                     min="6"
                     max="72"
-                    value={recipe.print?.stepNumberFontSize ?? 16}
-                    onChange={(e) => updatePrintField("stepNumberFontSize", Number(e.target.value))}
+                      value={recipe.print?.stepNumberFontSize ?? globalPrintDefaults?.stepNumberFontSize ?? 16}
+                      onChange={(e) => updatePrintField("stepNumberFontSize", Number(e.target.value))}
                     placeholder="16 px"
                   />
                 </label>

@@ -42,6 +42,22 @@ export default function App() {
     createdAt: null,
     updatedAt: null
   })
+  // Global print defaults (Option B)
+  const [globalPrintDefaults, setGlobalPrintDefaults] = useState(() => {
+    try {
+      const raw = localStorage.getItem('recettes_print_defaults')
+      return raw ? JSON.parse(raw) : {}
+    } catch (e) {
+      return {}
+    }
+  })
+
+  // Persist global defaults to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('recettes_print_defaults', JSON.stringify(globalPrintDefaults))
+    } catch (e) {}
+  }, [globalPrintDefaults])
 
   const previewRef = useRef()
   const [searchResults, setSearchResults] = useState([])
@@ -424,13 +440,14 @@ export default function App() {
   function downloadPdf() {
     const element = previewRef.current
     if (!element) return
-    // Build options using recipe.print if available
-    const unit = recipe.print?.marginUnit || 'mm'
+    // Build options using recipe.print if available, otherwise global defaults
+    const mergedPrint = recipe.print || globalPrintDefaults || {}
+    const unit = mergedPrint.marginUnit || 'mm'
     // html2pdf expects margin in the same unit as jsPDF.unit; pass array [top, left, bottom, right]
-    const mt = recipe.print?.marginTop != null ? Number(recipe.print.marginTop) : 10
-    const mb = recipe.print?.marginBottom != null ? Number(recipe.print.marginBottom) : mt
-    const ml = recipe.print?.marginLeft != null ? Number(recipe.print.marginLeft) : 10
-    const mr = recipe.print?.marginRight != null ? Number(recipe.print.marginRight) : ml
+    const mt = mergedPrint.marginTop != null ? Number(mergedPrint.marginTop) : 10
+    const mb = mergedPrint.marginBottom != null ? Number(mergedPrint.marginBottom) : mt
+    const ml = mergedPrint.marginLeft != null ? Number(mergedPrint.marginLeft) : 10
+    const mr = mergedPrint.marginRight != null ? Number(mergedPrint.marginRight) : ml
 
     const opt = {
       margin: [mt, ml, mb, mr],
@@ -603,7 +620,12 @@ export default function App() {
                   {showHelp && (
                     <Tutorial onClose={() => setShowHelp(false)} />
                   )}
-                  <RecipeEditor recipe={recipe} onChange={handleChange} />
+                  <RecipeEditor
+                    recipe={recipe}
+                    onChange={handleChange}
+                    globalPrintDefaults={globalPrintDefaults}
+                    setGlobalPrintDefaults={setGlobalPrintDefaults}
+                  />
                 </>
               )}
             </section>
@@ -615,21 +637,22 @@ export default function App() {
                   data-tutorial="preview"
                   className="preview-wrapper"
                   style={{
-                    // keep theme variables on root; print vars here
-                    ...(recipe.print ? (() => {
-                      const unit = recipe.print.marginUnit || 'mm'
-                      const title = recipe.print.titleFontSize != null ? `${recipe.print.titleFontSize}px` : undefined
-                      const subtitle = recipe.print.subtitleFontSize != null ? `${recipe.print.subtitleFontSize}px` : undefined
-                      const body = recipe.print.bodyFontSize != null ? `${recipe.print.bodyFontSize}px` : undefined
-                      const categories = recipe.print.categoriesFontSize != null ? `${recipe.print.categoriesFontSize}px` : undefined
-                      const meta = recipe.print.metaFontSize != null ? `${recipe.print.metaFontSize}px` : undefined
-                      const ingTitle = recipe.print.ingredientsTitleFontSize != null ? `${recipe.print.ingredientsTitleFontSize}px` : undefined
-                      const ingBodyVal = recipe.print.ingredientsBodyFontSize != null ? recipe.print.ingredientsBodyFontSize : recipe.print.ingredientsFontSize
+                    // Use recipe.print if present, otherwise fall back to globalPrintDefaults
+                    ...( (() => {
+                      const merged = recipe.print || globalPrintDefaults || {}
+                      const unit = merged.marginUnit || 'mm'
+                      const title = merged.titleFontSize != null ? `${merged.titleFontSize}px` : undefined
+                      const subtitle = merged.subtitleFontSize != null ? `${merged.subtitleFontSize}px` : undefined
+                      const body = merged.bodyFontSize != null ? `${merged.bodyFontSize}px` : undefined
+                      const categories = merged.categoriesFontSize != null ? `${merged.categoriesFontSize}px` : undefined
+                      const meta = merged.metaFontSize != null ? `${merged.metaFontSize}px` : undefined
+                      const ingTitle = merged.ingredientsTitleFontSize != null ? `${merged.ingredientsTitleFontSize}px` : undefined
+                      const ingBodyVal = merged.ingredientsBodyFontSize != null ? merged.ingredientsBodyFontSize : merged.ingredientsFontSize
                       const ingBody = ingBodyVal != null ? `${ingBodyVal}px` : undefined
-                      const stepTitle = recipe.print.stepsTitleFontSize != null ? `${recipe.print.stepsTitleFontSize}px` : undefined
-                      const stepBodyVal = recipe.print.stepsBodyFontSize != null ? recipe.print.stepsBodyFontSize : recipe.print.stepsFontSize
+                      const stepTitle = merged.stepsTitleFontSize != null ? `${merged.stepsTitleFontSize}px` : undefined
+                      const stepBodyVal = merged.stepsBodyFontSize != null ? merged.stepsBodyFontSize : merged.stepsFontSize
                       const stepBody = stepBodyVal != null ? `${stepBodyVal}px` : undefined
-                      const stepNumber = recipe.print.stepNumberFontSize != null ? `${recipe.print.stepNumberFontSize}px` : undefined
+                      const stepNumber = merged.stepNumberFontSize != null ? `${merged.stepNumberFontSize}px` : undefined
 
                       return {
                         '--print-title-font-size': title,
@@ -642,15 +665,15 @@ export default function App() {
                         '--print-steps-title-font-size': stepTitle,
                         '--print-steps-font-size': stepBody,
                         '--print-step-number-font-size': stepNumber,
-                        '--print-margin-top': (recipe.print.marginTop != null ? String(recipe.print.marginTop) + unit : undefined),
-                        '--print-margin-bottom': (recipe.print.marginBottom != null ? String(recipe.print.marginBottom) + unit : undefined),
-                        '--print-margin-left': (recipe.print.marginLeft != null ? String(recipe.print.marginLeft) + unit : undefined),
-                        '--print-margin-right': (recipe.print.marginRight != null ? String(recipe.print.marginRight) + unit : undefined)
+                        '--print-margin-top': (merged.marginTop != null ? String(merged.marginTop) + unit : undefined),
+                        '--print-margin-bottom': (merged.marginBottom != null ? String(merged.marginBottom) + unit : undefined),
+                        '--print-margin-left': (merged.marginLeft != null ? String(merged.marginLeft) + unit : undefined),
+                        '--print-margin-right': (merged.marginRight != null ? String(merged.marginRight) + unit : undefined)
                       }
-                    })() : {})
+                    })() )
                   }}
                 >
-                  <RecipePreview recipe={recipe} />
+                  <RecipePreview recipe={recipe} globalPrintDefaults={globalPrintDefaults} />
                 </div>
               </section>
             )}

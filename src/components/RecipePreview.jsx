@@ -1,8 +1,8 @@
 import React from 'react'
 
-export default function RecipePreview({ recipe }) {
+export default function RecipePreview({ recipe, globalPrintDefaults }) {
   // Compute inline styles from recipe.print for immediate live preview updates
-  const print = recipe.print || {}
+  const print = recipe.print || globalPrintDefaults || {}
   const unit = print.marginUnit || 'mm'
   const articleStyle = {
     fontSize: print.bodyFontSize ? `${print.bodyFontSize}px` : undefined,
@@ -20,6 +20,7 @@ export default function RecipePreview({ recipe }) {
   const stepNumStyle = { fontSize: print.stepNumberFontSize ? `${print.stepNumberFontSize}px` : undefined }
   const categoriesStyle = { fontSize: print.categoriesFontSize ? `${print.categoriesFontSize}px` : undefined }
   const metaStyle = { fontSize: print.metaFontSize ? `${print.metaFontSize}px` : undefined }
+  const hasMeta = recipe.servings || recipe.prepTime || recipe.cookTime
   const ingredientsTitleStyle = { fontSize: print.ingredientsTitleFontSize ? `${print.ingredientsTitleFontSize}px` : undefined }
   const stepsTitleStyle = { fontSize: print.stepsTitleFontSize ? `${print.stepsTitleFontSize}px` : undefined }
 
@@ -39,31 +40,41 @@ export default function RecipePreview({ recipe }) {
           </div>
         )}
         <p className="subtitle" style={subtitleStyle}>{recipe.subtitle}</p>
+        {hasMeta && (
         <div className="meta" style={metaStyle}>
-          <div className="meta-item">
-            <svg className="field-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z" fill="currentColor" />
-              <path d="M6 20c0-2.21 3.58-4 6-4s6 1.79 6 4v1H6v-1z" fill="currentColor" />
-            </svg>
-            <span>Personnes :</span>
-            <strong>{recipe.servings}</strong>
-          </div>
-          <div className="meta-item">
-            <svg className="field-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-              <path d="M12 8v5l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" fill="none" />
-            </svg>
-            <span>Préparation :</span>
-            <strong>{recipe.prepTime}</strong>
-          </div>
-          <div className="meta-item">
-            <svg className="field-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-              <path d="M7 7h10M7 11h10M7 15h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span>Cuisson :</span>
-            <strong>{recipe.cookTime}</strong>
-          </div>
+          {recipe.servings && (
+            <div className="meta-item">
+              <svg className="field-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z" fill="currentColor" />
+                <path d="M6 20c0-2.21 3.58-4 6-4s6 1.79 6 4v1H6v-1z" fill="currentColor" />
+              </svg>
+              <span>Personnes :</span>
+              <strong>{recipe.servings}</strong>
+            </div>
+          )}
+
+          {recipe.prepTime && (
+            <div className="meta-item">
+              <svg className="field-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <path d="M12 8v5l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" fill="none" />
+              </svg>
+              <span>Préparation :</span>
+              <strong>{recipe.prepTime}</strong>
+            </div>
+          )}
+
+          {recipe.cookTime && (
+            <div className="meta-item">
+              <svg className="field-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <path d="M7 7h10M7 11h10M7 15h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span>Cuisson :</span>
+              <strong>{recipe.cookTime}</strong>
+            </div>
+          )}
         </div>
+        )}
         {/* {(recipe.createdAt || recipe.updatedAt) && (
           <div className="preview-dates" style={{marginTop: 12, fontSize: '13px', color: 'var(--text-muted)'}}>
             {recipe.createdAt && <div>📅 Créée le {new Date(recipe.createdAt).toLocaleDateString('fr-FR')}</div>}
