@@ -27,6 +27,46 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [loadingRecipes, setLoadingRecipes] = useState(false)
   const [allRecipes, setAllRecipes] = useState([]) // Store all recipes separately
+
+  // Restore standalone recipe from URL or sessionStorage on load (or when recipes list updates)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const viewId = params.get('view')
+      if (viewId) {
+        // Try to find recipe in loaded recipes
+        const found = allRecipes.find(r => String(r.id) === String(viewId))
+        if (found) {
+          setStandaloneRecipe(found)
+          setShowProfile(false)
+          return
+        }
+        // Fallback: try sessionStorage by id or generic key
+        const rawById = sessionStorage.getItem(`standaloneRecipe_${viewId}`)
+        const rawGeneric = sessionStorage.getItem('standaloneRecipe')
+        const raw = rawById || rawGeneric
+        if (raw) {
+          const parsed = JSON.parse(raw)
+          setStandaloneRecipe(parsed)
+          setShowProfile(false)
+        }
+      } else {
+        // If no view param, still try generic session restore
+        const raw = sessionStorage.getItem('standaloneRecipe')
+        if (raw) {
+          const parsed = JSON.parse(raw)
+          setStandaloneRecipe(parsed)
+          setShowProfile(false)
+          const id = parsed && parsed.id ? String(parsed.id) : `temp_${Date.now()}`
+          const p = new URLSearchParams(window.location.search)
+          p.set('view', id)
+          window.history.replaceState({}, '', `${window.location.pathname}?${p.toString()}`)
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [allRecipes])
   const [deleteConfirm, setDeleteConfirm] = useState(null) // { id, title } or null
   const [isGuest, setIsGuest] = useState(false) // Guest mode state
   const [originalRecipe, setOriginalRecipe] = useState(null) // Track original recipe for unsaved changes detection
@@ -391,6 +431,21 @@ export default function App() {
     setShowProfile(false)
   }
 
+  function openStandaloneRecipe(r) {
+    try {
+      const id = r && r.id ? String(r.id) : `temp_${Date.now()}`
+      sessionStorage.setItem('standaloneRecipe', JSON.stringify(r))
+      if (r && r.id) sessionStorage.setItem(`standaloneRecipe_${id}`, JSON.stringify(r))
+      const params = new URLSearchParams(window.location.search)
+      params.set('view', id)
+      window.history.pushState({}, '', `${window.location.pathname}?${params.toString()}`)
+    } catch (e) {
+      // ignore
+    }
+    setStandaloneRecipe(r)
+    setShowProfile(false)
+  }
+
   function createNew() {
     const newRecipe = { title: '', subtitle: '', servings: '', prepTime: '', cookTime: '', ingredients: [''], steps: [''], image: null, tags: [], createdAt: null, updatedAt: null }
     setRecipe(newRecipe)
@@ -524,8 +579,18 @@ export default function App() {
             {!showProfile && (
               <div className="edit-header">
                 <button className="btn btn-ghost" onClick={() => {
-                  // If viewing standalone recipe, close it first
+                  // If viewing standalone recipe, close it first and clean URL/storage
                   if (standaloneRecipe) {
+                    try {
+                      const params = new URLSearchParams(window.location.search)
+                      params.delete('view')
+                      const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname
+                      window.history.replaceState({}, '', newUrl)
+                      sessionStorage.removeItem('standaloneRecipe')
+                      if (standaloneRecipe && standaloneRecipe.id) sessionStorage.removeItem(`standaloneRecipe_${standaloneRecipe.id}`)
+                    } catch (e) {
+                      // ignore
+                    }
                     setStandaloneRecipe(null)
                     setShowProfile(true)
                     return
@@ -632,7 +697,20 @@ export default function App() {
                     onPrintRecipe={printRecipe}
                     onSaveRecipe={saveCurrentRecipe}
                     onUpdateUser={(u) => { const next = users.map((x) => x.id === u.id ? u : x); persistUsers(next); setCurrentUser(u) }}
-                    onViewRecipe={(r) => { setStandaloneRecipe(r); setShowProfile(false) }}
+                    onViewRecipe={(r) => {
+                      try {
+                        const id = r && r.id ? String(r.id) : `temp_${Date.now()}`
+                        sessionStorage.setItem('standaloneRecipe', JSON.stringify(r))
+                        sessionStorage.setItem(`standaloneRecipe_${id}`, JSON.stringify(r))
+                        const params = new URLSearchParams(window.location.search)
+                        params.set('view', id)
+                        window.history.pushState({}, '', `${window.location.pathname}?${params.toString()}`)
+                      } catch (e) {
+                        // ignore storage errors
+                      }
+                      setStandaloneRecipe(r)
+                      setShowProfile(false)
+                    }}
                   />
                 ) : (
                   <>
@@ -644,6 +722,7 @@ export default function App() {
                       onChange={handleChange}
                       globalPrintDefaults={globalPrintDefaults}
                       setGlobalPrintDefaults={setGlobalPrintDefaults}
+                      onViewRecipe={openStandaloneRecipe}
                     />
                   </>
                 )}

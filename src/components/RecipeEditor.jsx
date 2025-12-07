@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import toast from 'react-hot-toast'
 
-export default function RecipeEditor({ recipe, onChange, globalPrintDefaults, setGlobalPrintDefaults }) {
+export default function RecipeEditor({ recipe, onChange, globalPrintDefaults, setGlobalPrintDefaults, onViewRecipe }) {
   function updateField(key, value) {
     onChange({ [key]: value });
   }
@@ -272,14 +272,24 @@ export default function RecipeEditor({ recipe, onChange, globalPrintDefaults, se
   return (
     <div className="editor">
       <section>
-          <h3>
-          📝 Nom de la recette
+          <h3 style={{display: 'flex', alignItems: 'center', gap: 12}}>
+          <span>📝 Nom de la recette</span>
           <input
             data-tutorial="title"
             value={recipe.title}
             onChange={(e) => updateField("title", e.target.value)}
             placeholder="ex: Tarte aux pommes"
+            style={{flex: 1}}
           />
+          <button
+            type="button"
+            className="btn small btn-ghost"
+            onClick={() => onViewRecipe && onViewRecipe(recipe)}
+            title="Lire la recette"
+            style={{whiteSpace: 'nowrap'}}
+          >
+            👁️ Lire
+          </button>
         </h3>
       </section>
       {/* Tags - moved under title */}
