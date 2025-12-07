@@ -362,7 +362,7 @@ export default function RecipeEditor({ recipe, onChange }) {
       </section>
 
       <section>
-        <h3>💬 Sous-titre</h3>
+        <h3>💬 Description</h3>
         <textarea
           className="auto-resize"
           rows={1}
@@ -747,7 +747,7 @@ export default function RecipeEditor({ recipe, onChange }) {
                   />
                 </label>
                 <label>
-                  Sous-titre
+                  Description
                   <input
                     type="number"
                     min="6"
