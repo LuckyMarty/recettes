@@ -220,3 +220,101 @@
   gap: 12px;
   margin-top: 12px;
 }
+
+// Print settings styles
+.print-settings {
+  margin-top: 20px;
+}
+
+.print-section {
+  background: var(--accent-light);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 24px;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.print-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.print-hint {
+  color: var(--muted);
+  font-size: 14px;
+  margin: -8px 0 20px 0;
+  line-height: 1.5;
+}
+
+.print-subsection {
+  margin-bottom: 24px;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.subsection-header {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.inline-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  
+  span {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-dark);
+    white-space: nowrap;
+  }
+  
+  select {
+    flex: 0 1 auto;
+    padding: 8px 12px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    background: white;
+    cursor: pointer;
+    
+    &:focus {
+      @include focus-ring;
+    }
+  }
+}
+
+.label-icon {
+  display: inline-block;
+  margin-right: 4px;
+  font-size: 14px;
+}
+
+// Override label styling within print settings for better spacing
+.print-section label {
+  margin-bottom: 16px;
+  font-size: 15px;
+  
+  input[type="number"],
+  select {
+    font-size: 15px;
+    padding: 10px 12px;
+  }
+}
+
