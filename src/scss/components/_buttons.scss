@@ -1,6 +1,8 @@
 // ===========================
 // Button system
 // ===========================
+@use '../utils/mixins' as *;
+
 .btn {
   @include button-base;
 

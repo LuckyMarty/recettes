@@ -1,20 +1,23 @@
 // Central stylesheet — imports SCSS partials for a modular architecture.
 // Keep this file as the single entry point used by the app (imported from JS).
 
-@import './scss/utils/variables';
-@import './scss/utils/mixins';
-@import './scss/base/base';
-@import './scss/layout/layout';
-@import './scss/pages/auth';
-@import './scss/pages/profile';
-@import './scss/components/buttons';
-@import './scss/components/editor';
-@import './scss/components/tags';
-@import './scss/components/help';
-@import './scss/components/tutorial';
-@import './scss/preview/preview';
-@import './scss/print/print';
-@import './scss/responsive/responsive';
+// Use modern Sass module system. `as *` exposes members globally to preserve
+// existing code that references variables/mixins without a namespace.
+@use './scss/utils/variables' as *;
+@use './scss/utils/mixins' as *;
+@use './scss/base/base' as *;
+@use './scss/layout/layout' as *;
+@use './scss/pages/auth' as *;
+@use './scss/pages/profile' as *;
+@use './scss/components/buttons' as *;
+@use './scss/components/editor' as *;
+@use './scss/components/tags' as *;
+@use './scss/components/help' as *;
+@use './scss/components/tutorial' as *;
+@use './scss/preview/preview' as *;
+// Explicitly import the partial to avoid ambiguity when both `_print.scss` and `print.scss` exist
+@use './scss/print/_print' as *;
+@use './scss/responsive/responsive' as *;
 
 /*
   This file intentionally only contains imports. All styles are implemented

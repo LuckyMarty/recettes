@@ -424,13 +424,21 @@ export default function App() {
   function downloadPdf() {
     const element = previewRef.current
     if (!element) return
+    // Build options using recipe.print if available
+    const unit = recipe.print?.marginUnit || 'mm'
+    // html2pdf expects margin in the same unit as jsPDF.unit; pass array [top, left, bottom, right]
+    const mt = recipe.print?.marginTop != null ? Number(recipe.print.marginTop) : 10
+    const mb = recipe.print?.marginBottom != null ? Number(recipe.print.marginBottom) : mt
+    const ml = recipe.print?.marginLeft != null ? Number(recipe.print.marginLeft) : 10
+    const mr = recipe.print?.marginRight != null ? Number(recipe.print.marginRight) : ml
+
     const opt = {
-      margin: 0.5,
+      margin: [mt, ml, mb, mr],
       filename: `${recipe.title.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       // useCORS helps if images are loaded from remote URLs; data-URLs work without CORS.
       html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      jsPDF: { unit, format: 'a4', orientation: 'portrait' }
     }
     // Apply temporary class so the preview uses print styling during PDF render
     element.classList.add('print-mode')
@@ -601,7 +609,47 @@ export default function App() {
             </section>
             {!showProfile && (
               <section className="right">
-                <div ref={previewRef} data-tutorial="preview" className="preview-wrapper">
+                    {/* Apply CSS variables from recipe.print so live preview and print-mode can read them */}
+                <div
+                  ref={previewRef}
+                  data-tutorial="preview"
+                  className="preview-wrapper"
+                  style={{
+                    // keep theme variables on root; print vars here
+                    ...(recipe.print ? (() => {
+                      const unit = recipe.print.marginUnit || 'mm'
+                      const title = recipe.print.titleFontSize != null ? `${recipe.print.titleFontSize}px` : undefined
+                      const subtitle = recipe.print.subtitleFontSize != null ? `${recipe.print.subtitleFontSize}px` : undefined
+                      const body = recipe.print.bodyFontSize != null ? `${recipe.print.bodyFontSize}px` : undefined
+                      const categories = recipe.print.categoriesFontSize != null ? `${recipe.print.categoriesFontSize}px` : undefined
+                      const meta = recipe.print.metaFontSize != null ? `${recipe.print.metaFontSize}px` : undefined
+                      const ingTitle = recipe.print.ingredientsTitleFontSize != null ? `${recipe.print.ingredientsTitleFontSize}px` : undefined
+                      const ingBodyVal = recipe.print.ingredientsBodyFontSize != null ? recipe.print.ingredientsBodyFontSize : recipe.print.ingredientsFontSize
+                      const ingBody = ingBodyVal != null ? `${ingBodyVal}px` : undefined
+                      const stepTitle = recipe.print.stepsTitleFontSize != null ? `${recipe.print.stepsTitleFontSize}px` : undefined
+                      const stepBodyVal = recipe.print.stepsBodyFontSize != null ? recipe.print.stepsBodyFontSize : recipe.print.stepsFontSize
+                      const stepBody = stepBodyVal != null ? `${stepBodyVal}px` : undefined
+                      const stepNumber = recipe.print.stepNumberFontSize != null ? `${recipe.print.stepNumberFontSize}px` : undefined
+
+                      return {
+                        '--print-title-font-size': title,
+                        '--print-subtitle-font-size': subtitle,
+                        '--print-body-font-size': body,
+                        '--print-categories-font-size': categories,
+                        '--print-meta-font-size': meta,
+                        '--print-ingredients-title-font-size': ingTitle,
+                        '--print-ingredients-font-size': ingBody,
+                        '--print-steps-title-font-size': stepTitle,
+                        '--print-steps-font-size': stepBody,
+                        '--print-step-number-font-size': stepNumber,
+                        '--print-margin-top': (recipe.print.marginTop != null ? String(recipe.print.marginTop) + unit : undefined),
+                        '--print-margin-bottom': (recipe.print.marginBottom != null ? String(recipe.print.marginBottom) + unit : undefined),
+                        '--print-margin-left': (recipe.print.marginLeft != null ? String(recipe.print.marginLeft) + unit : undefined),
+                        '--print-margin-right': (recipe.print.marginRight != null ? String(recipe.print.marginRight) + unit : undefined)
+                      }
+                    })() : {})
+                  }}
+                >
                   <RecipePreview recipe={recipe} />
                 </div>
               </section>

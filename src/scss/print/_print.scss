@@ -31,39 +31,62 @@
   .recipe-card {
     border: none;
     box-shadow: none;
-    margin: 0.5cm;
-    padding: 8px;
+    margin: 0;
     background: white !important;
     position: relative;
-    font-size: 10px !important;
+    /* Use CSS variables driven from the editor (recipe.print) */
+    font-size: var(--print-body-font-size, 10px) !important;
 
     header h2 {
-      font-size: 16px !important;
+      font-size: var(--print-title-font-size, 16px) !important;
     }
 
     .subtitle {
-      font-size: 9px !important;
+      font-size: var(--print-subtitle-font-size, 9px) !important;
     }
 
     h3 {
-      font-size: 12px !important;
+      font-size: var(--print-h3-font-size, 12px) !important;
+    }
+    /* Categories (tags) and meta sizing */
+    .preview-tags {
+      font-size: var(--print-categories-font-size, 12px) !important;
+    }
+
+    .meta {
+      font-size: var(--print-meta-font-size, 13px) !important;
+    }
+
+    /* Per-section title overrides (ingredients/steps) */
+    .ing-title {
+      font-size: var(--print-ingredients-title-font-size, 16px) !important;
+    }
+
+    .steps-title {
+      font-size: var(--print-steps-title-font-size, 16px) !important;
     }
   }
 
-  .meta-item strong,
   .ingredients-table td,
   .steps-table td {
-    font-size: 10px !important;
+    font-size: var(--print-ingredients-font-size, 10px) !important;
   }
 
   .meta-item {
     background: white !important;
     border: 1px solid #ddd;
-    font-size: 10px !important;
+    font-size: var(--print-meta-font-size, 13px) !important;
+  }
+
+  .meta-item strong {
+    font-size: var(--print-meta-font-size, 13px) !important;
   }
 
   .step-num {
     background: white !important;
+  }
+  .step-num {
+    font-size: var(--print-step-number-font-size, 16px) !important;
   }
 
   .ingredients-table td,
@@ -81,7 +104,7 @@
     padding: 6px 10px !important;
     gap: 6px !important;
     border-radius: 12px !important;
-    font-size: 9px !important;
+    font-size: var(--print-categories-font-size, 9px) !important;
   }
 
   .mini-tag {
@@ -125,6 +148,10 @@
     padding-right: 100px !important;
   }
 
+  .step-num {
+    font-size: var(--print-step-number-font-size, 16px) !important;
+  }
+
   @page {
     margin: 0;
     size: A4;
@@ -154,22 +181,36 @@
   .recipe-card {
     border: none;
     box-shadow: none;
-    margin: 0.5cm;
-    padding: 8px;
+    margin: 0;
     background: white !important;
     position: relative;
-    font-size: 10px !important;
+    font-size: var(--print-body-font-size, 10px) !important;
 
     header h2 {
-      font-size: 16px !important;
+      font-size: var(--print-title-font-size, 16px) !important;
     }
 
     .subtitle {
-      font-size: 9px !important;
+      font-size: var(--print-subtitle-font-size, 9px) !important;
     }
 
     h3 {
-      font-size: 12px !important;
+      font-size: var(--print-h3-font-size, 12px) !important;
+    }
+    .preview-tags {
+      font-size: var(--print-categories-font-size, 12px) !important;
+    }
+
+    .meta {
+      font-size: var(--print-meta-font-size, 13px) !important;
+    }
+
+    .ing-title {
+      font-size: var(--print-ingredients-title-font-size, 16px) !important;
+    }
+
+    .steps-title {
+      font-size: var(--print-steps-title-font-size, 16px) !important;
     }
   }
 
@@ -190,13 +231,16 @@
   .meta-item {
     background: white !important;
     border: 1px solid #ddd;
-    font-size: 10px !important;
+    font-size: var(--print-meta-font-size, 13px) !important;
   }
 
-  .meta-item strong,
+  .meta-item strong {
+    font-size: var(--print-meta-font-size, 13px) !important;
+  }
+
   .ingredients-table td,
   .steps-table td {
-    font-size: 10px !important;
+    font-size: var(--print-ingredients-font-size, 10px) !important;
   }
 
   .ingredients-table,
@@ -215,7 +259,7 @@
     padding: 6px 10px !important;
     gap: 6px !important;
     border-radius: 12px !important;
-    font-size: 9px !important;
+    font-size: var(--print-categories-font-size, 9px) !important;
     background: white !important;
     border-color: #ddd !important;
     box-shadow: none !important;
@@ -234,7 +278,7 @@
     padding: 6px 10px !important;
     gap: 6px !important;
     border-radius: 12px !important;
-    font-size: 10px !important;
+    font-size: var(--print-button-font-size, 10px) !important;
   }
 
   .print-help {
@@ -250,5 +294,23 @@
     filter: none !important;
     -webkit-filter: none !important;
     opacity: 1 !important;
+  }
+}
+
+/* Apply padding using margin variables set on the preview wrapper. These variables
+   should include units (e.g., '10mm') and are set inline by React. */
+.preview-wrapper.print-mode .recipe-card {
+  padding-top: var(--print-margin-top, 10mm) !important;
+  padding-bottom: var(--print-margin-bottom, 10mm) !important;
+  padding-left: var(--print-margin-left, 10mm) !important;
+  padding-right: var(--print-margin-right, 10mm) !important;
+}
+
+@media print {
+  .preview-wrapper .recipe-card {
+    padding-top: var(--print-margin-top, 10mm) !important;
+    padding-bottom: var(--print-margin-bottom, 10mm) !important;
+    padding-left: var(--print-margin-left, 10mm) !important;
+    padding-right: var(--print-margin-right, 10mm) !important;
   }
 }

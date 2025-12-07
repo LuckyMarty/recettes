@@ -261,6 +261,13 @@ export default function RecipeEditor({ recipe, onChange }) {
     onChange({ ingredients: next });
   }
 
+  // Update print/pdf related settings stored on `recipe.print`.
+  function updatePrintField(key, value) {
+    const next = { ...(recipe.print || {}) };
+    next[key] = value;
+    onChange({ print: next });
+  }
+
   return (
     <div className="editor">
       <section>
@@ -646,6 +653,158 @@ export default function RecipeEditor({ recipe, onChange }) {
         >
           ➕ Ajouter une étape
         </button>
+      </section>
+      <section>
+        <h3>🖨️ Impression / PDF</h3>
+        <p className="muted-text">Personnalisez les tailles de police et les marges pour l'export PDF/impression.</p>
+        <div className="row two-columns">
+          <div>
+            <label>
+              Titre (px)
+              <input
+                type="number"
+                min="6"
+                value={recipe.print?.titleFontSize ?? 20}
+                onChange={(e) => updatePrintField("titleFontSize", Number(e.target.value))}
+              />
+            </label>
+
+            <label>
+              Sous-titre (px)
+              <input
+                type="number"
+                min="6"
+                value={recipe.print?.subtitleFontSize ?? 14}
+                onChange={(e) => updatePrintField("subtitleFontSize", Number(e.target.value))}
+              />
+            </label>
+
+            
+            <label>
+              Catégories (px)
+              <input
+                type="number"
+                min="6"
+                value={recipe.print?.categoriesFontSize ?? 12}
+                onChange={(e) => updatePrintField("categoriesFontSize", Number(e.target.value))}
+              />
+            </label>
+
+            <label>
+              Portions & temps (px)
+              <input
+                type="number"
+                min="6"
+                value={recipe.print?.metaFontSize ?? 13}
+                onChange={(e) => updatePrintField("metaFontSize", Number(e.target.value))}
+              />
+            </label>
+          </div>
+
+          <div>
+            <label>
+              Ingrédients (px)
+              <input
+                type="number"
+                min="6"
+                value={recipe.print?.ingredientsBodyFontSize ?? recipe.print?.ingredientsFontSize ?? 12}
+                onChange={(e) => updatePrintField("ingredientsBodyFontSize", Number(e.target.value))}
+              />
+            </label>
+
+            <label>
+              Étapes (px)
+              <input
+                type="number"
+                min="6"
+                value={recipe.print?.stepsBodyFontSize ?? recipe.print?.stepsFontSize ?? 12}
+                onChange={(e) => updatePrintField("stepsBodyFontSize", Number(e.target.value))}
+              />
+            </label>
+
+            <label>
+              Ingrédients - titre (px)
+              <input
+                type="number"
+                min="6"
+                value={recipe.print?.ingredientsTitleFontSize ?? 16}
+                onChange={(e) => updatePrintField("ingredientsTitleFontSize", Number(e.target.value))}
+              />
+            </label>
+
+            <label>
+              Étapes - titre (px)
+              <input
+                type="number"
+                min="6"
+                value={recipe.print?.stepsTitleFontSize ?? 16}
+                onChange={(e) => updatePrintField("stepsTitleFontSize", Number(e.target.value))}
+              />
+            </label>
+
+            <label>
+              Numéro étape (px)
+              <input
+                type="number"
+                min="6"
+                value={recipe.print?.stepNumberFontSize ?? 16}
+                onChange={(e) => updatePrintField("stepNumberFontSize", Number(e.target.value))}
+              />
+            </label>
+
+            <label>
+              Unité marges
+              <select
+                value={recipe.print?.marginUnit ?? "mm"}
+                onChange={(e) => updatePrintField("marginUnit", e.target.value)}
+              >
+                <option value="mm">mm</option>
+                <option value="cm">cm</option>
+                <option value="in">in</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div className="row two-columns" style={{ marginTop: 8 }}>
+          <label>
+            Marge haut ({recipe.print?.marginUnit ?? "mm"})
+            <input
+              type="number"
+              min="0"
+              value={recipe.print?.marginTop ?? 10}
+              onChange={(e) => updatePrintField("marginTop", Number(e.target.value))}
+            />
+          </label>
+          <label>
+            Marge bas ({recipe.print?.marginUnit ?? "mm"})
+            <input
+              type="number"
+              min="0"
+              value={recipe.print?.marginBottom ?? 10}
+              onChange={(e) => updatePrintField("marginBottom", Number(e.target.value))}
+            />
+          </label>
+          <label>
+            Marge gauche ({recipe.print?.marginUnit ?? "mm"})
+            <input
+              type="number"
+              min="0"
+              value={recipe.print?.marginLeft ?? 10}
+              onChange={(e) => updatePrintField("marginLeft", Number(e.target.value))}
+            />
+          </label>
+          <label>
+            Marge droite ({recipe.print?.marginUnit ?? "mm"})
+            <input
+              type="number"
+              min="0"
+              value={recipe.print?.marginRight ?? 10}
+              onChange={(e) => updatePrintField("marginRight", Number(e.target.value))}
+            />
+          </label>
+        </div>
+        <p className="muted-text">Les valeurs sont enregistrées avec la recette et utilisées lors de l'export PDF/impression.</p>
       </section>
     </div>
   );

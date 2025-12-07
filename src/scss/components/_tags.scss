@@ -27,6 +27,7 @@
   &.preview {
     background: var(--accent-light);
     border: 2px solid var(--accent);
+    font-size: inherit;
   }
 
   &[draggable] {

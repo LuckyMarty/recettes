@@ -1,6 +1,8 @@
 // ===========================
 // Auth panel styles
 // ===========================
+@use '../utils/mixins' as *;
+
 .auth-panel {
   max-width: 420px;
   width: 100%;

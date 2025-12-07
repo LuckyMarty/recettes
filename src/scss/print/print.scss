@@ -1,0 +1,84 @@
+/* Print and PDF styles driven by CSS variables set on `.preview-wrapper`.
+   This file maps recipe.print values to the preview and print-mode rendering.
+*/
+
+/* Default tweaks for preview and print-mode */
+.preview-wrapper .recipe-card header h2 {
+  font-size: var(--print-title-font-size, 20px);
+  line-height: 1.15;
+}
+
+.preview-wrapper .recipe-card .subtitle {
+  font-size: var(--print-subtitle-font-size, 14px);
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+/* Base body font for the recipe content */
+.preview-wrapper .recipe-card {
+  font-size: var(--print-body-font-size, 12px);
+}
+
+.preview-wrapper .ingredients-table td {
+  font-size: var(--print-ingredients-font-size, 12px);
+}
+
+.preview-wrapper .steps-table .step-desc {
+  font-size: var(--print-steps-font-size, 12px);
+}
+
+/* When generating PDF we add `print-mode` on the wrapper; mirror same rules to be explicit */
+.preview-wrapper.print-mode .recipe-card header h2 {
+  font-size: var(--print-title-font-size, 20px) !important;
+}
+
+.preview-wrapper.print-mode .recipe-card .subtitle {
+  font-size: var(--print-subtitle-font-size, 14px) !important;
+}
+
+.preview-wrapper.print-mode .recipe-card {
+  font-size: var(--print-body-font-size, 12px) !important;
+}
+
+.preview-wrapper.print-mode .ingredients-table td {
+  font-size: var(--print-ingredients-font-size, 12px) !important;
+}
+
+.preview-wrapper.print-mode .steps-table .step-desc {
+  font-size: var(--print-steps-font-size, 12px) !important;
+}
+
+/* Hide UI chrome and simplify layout when printing */
+.preview-wrapper.print-mode .btn,
+.preview-wrapper.print-mode .edit-controls,
+.preview-wrapper.print-mode .help-panel,
+.preview-wrapper.print-mode .toaster,
+.preview-wrapper.print-mode .tag-chip {
+  display: none !important;
+}
+
+/* Apply page-like inner padding to the recipe card during print-mode
+   using the margin variables (these should include units, e.g. '10mm'). */
+.preview-wrapper.print-mode .recipe-card {
+  box-sizing: border-box;
+  padding-top: var(--print-margin-top, 10mm) !important;
+  padding-bottom: var(--print-margin-bottom, 10mm) !important;
+  padding-left: var(--print-margin-left, 10mm) !important;
+  padding-right: var(--print-margin-right, 10mm) !important;
+}
+
+@media print {
+  .preview-wrapper .recipe-card header h2 {
+    font-size: var(--print-title-font-size, 20px);
+  }
+  .preview-wrapper .recipe-card .subtitle {
+    font-size: var(--print-subtitle-font-size, 14px);
+  }
+  .preview-wrapper .recipe-card {
+    font-size: var(--print-body-font-size, 12px);
+    padding-top: var(--print-margin-top, 10mm);
+    padding-bottom: var(--print-margin-bottom, 10mm);
+    padding-left: var(--print-margin-left, 10mm);
+    padding-right: var(--print-margin-right, 10mm);
+  }
+}

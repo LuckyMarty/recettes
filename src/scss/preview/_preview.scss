@@ -1,6 +1,8 @@
 // ===========================
 // Preview & recipe card styles
 // ===========================
+@use '../utils/mixins' as *;
+
 .preview-wrapper {
   padding: 32px 24px;
   background: var(--bg-warm);
@@ -57,7 +59,7 @@
         margin-left: 4px;
         color: var(--text-dark);
         font-weight: 700;
-        font-size: 14px;
+        font-size: inherit;
       }
     }
   }
@@ -96,7 +98,6 @@
     text-align: center;
   }
 }
-
 // Ingredients & steps tables
 .ingredients-table {
   @include table-base;

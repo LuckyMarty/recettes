@@ -1,6 +1,8 @@
 // ===========================
 // Editor styles
 // ===========================
+@use '../utils/mixins' as *;
+
 .editor {
   label {
     display: block;
