@@ -763,6 +763,8 @@ export default function App() {
                           '--print-steps-title-font-size': stepTitle,
                           '--print-steps-font-size': stepBody,
                           '--print-step-number-font-size': stepNumber,
+                          '--accent': themes[theme].accent,
+                          '--accent-light': themes[theme].light,
                           '--print-margin-top': (merged.marginTop != null ? String(merged.marginTop) + unit : undefined),
                           '--print-margin-bottom': (merged.marginBottom != null ? String(merged.marginBottom) + unit : undefined),
                           '--print-margin-left': (merged.marginLeft != null ? String(merged.marginLeft) + unit : undefined),
