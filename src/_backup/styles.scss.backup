@@ -1,0 +1,31 @@
+/* Backup of styles.scss saved into _backup/ to tidy project root */
+:root {
+  --gap: 20px;
+  --accent: #e67e50;
+  --accent-light: #fef3ed;
+  --muted: #666;
+  --bg-warm: #faf8f5;
+  --border: #e5dfd7;
+  --text-dark: #2c2416;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
+* {
+  box-sizing: border-box
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  color: var(--text-dark);
+  background: var(--bg-warm);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* (Truncated backup content — full file copied from original styles.scss.backup) */

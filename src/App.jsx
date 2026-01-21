@@ -1,74 +1,27 @@
 import React, { useRef, useState, useEffect } from 'react'
-import RecipeEditor from './components/RecipeEditor.jsx'
-import RecipePreview from './components/RecipePreview.jsx'
+import AuthGate from './components/AuthGate.jsx'
+import AppModals from './components/AppModals.jsx'
 import html2pdf from 'html2pdf.js'
-import Auth from './components/Auth.jsx'
-import Profile from './components/Profile.jsx'
-import SearchBar from './components/SearchBar.jsx'
-import toast, { Toaster } from 'react-hot-toast'
-import Tutorial from './components/Tutorial.jsx'
-import RecipePage from './Recipe.jsx'
+import toast from 'react-hot-toast'
+import { useApi, useLocalStorage, useStandaloneRecipe, useTheme, useAuth } from './hooks'
 
 export default function App() {
   const [showHelp, setShowHelp] = useState(false)
-  const [theme, setTheme] = useState('orange') // orange, blue, green, purple, pink
-  const themes = {
-    orange: { accent: '#e67e50', light: '#fef3ed' },
-    blue: { accent: '#4a90e2', light: '#e8f4fd' },
-    green: { accent: '#52c41a', light: '#f0fae8' },
-    purple: { accent: '#9c27b0', light: '#f3e5f5' },
-    pink: { accent: '#ec407a', light: '#fce4ec' }
-  }
+  const { theme, setTheme, themes } = useTheme('orange')
   const [users, setUsers] = useState([])
-  const [currentUser, setCurrentUser] = useState(null)
-  const [showAuth, setShowAuth] = useState(false)
+  const { apiLogin, apiRegister, apiCreateRecipe, apiUpdateRecipe, apiDeleteRecipe, apiGetUser, apiGetUserRecipes, API_BASE } = useApi()
+  const auth = useAuth({ apiLogin, apiRegister })
   const [showProfile, setShowProfile] = useState(false)
   const [standaloneRecipe, setStandaloneRecipe] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [loadingRecipes, setLoadingRecipes] = useState(false)
   const [allRecipes, setAllRecipes] = useState([]) // Store all recipes separately
 
-  // Restore standalone recipe from URL or sessionStorage on load (or when recipes list updates)
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search)
-      const viewId = params.get('view')
-      if (viewId) {
-        // Try to find recipe in loaded recipes
-        const found = allRecipes.find(r => String(r.id) === String(viewId))
-        if (found) {
-          setStandaloneRecipe(found)
-          setShowProfile(false)
-          return
-        }
-        // Fallback: try sessionStorage by id or generic key
-        const rawById = sessionStorage.getItem(`standaloneRecipe_${viewId}`)
-        const rawGeneric = sessionStorage.getItem('standaloneRecipe')
-        const raw = rawById || rawGeneric
-        if (raw) {
-          const parsed = JSON.parse(raw)
-          setStandaloneRecipe(parsed)
-          setShowProfile(false)
-        }
-      } else {
-        // If no view param, still try generic session restore
-        const raw = sessionStorage.getItem('standaloneRecipe')
-        if (raw) {
-          const parsed = JSON.parse(raw)
-          setStandaloneRecipe(parsed)
-          setShowProfile(false)
-          const id = parsed && parsed.id ? String(parsed.id) : `temp_${Date.now()}`
-          const p = new URLSearchParams(window.location.search)
-          p.set('view', id)
-          window.history.replaceState({}, '', `${window.location.pathname}?${p.toString()}`)
-        }
-      }
-    } catch (e) {
-      // ignore
-    }
-  }, [allRecipes])
+  // Standalone recipe URL/session handling via hook
+  const { standaloneRecipe: hookStandaloneRecipe, setStandaloneRecipe: setHookStandaloneRecipe, openStandaloneRecipe: hookOpenStandaloneRecipe } = useStandaloneRecipe(allRecipes)
+  // Mirror hook value into local state for backward compatibility
+  useEffect(() => { setStandaloneRecipe(hookStandaloneRecipe); if (hookStandaloneRecipe) setShowProfile(false) }, [hookStandaloneRecipe])
   const [deleteConfirm, setDeleteConfirm] = useState(null) // { id, title } or null
-  const [isGuest, setIsGuest] = useState(false) // Guest mode state
   const [originalRecipe, setOriginalRecipe] = useState(null) // Track original recipe for unsaved changes detection
   const [showBackConfirm, setShowBackConfirm] = useState(false) // Show confirmation when clicking back with unsaved changes
   const [recipe, setRecipe] = useState({
@@ -84,172 +37,52 @@ export default function App() {
     createdAt: null,
     updatedAt: null
   })
-  // Global print defaults (Option B)
-  const [globalPrintDefaults, setGlobalPrintDefaults] = useState(() => {
-    try {
-      const raw = localStorage.getItem('recettes_print_defaults')
-      return raw ? JSON.parse(raw) : {}
-    } catch (e) {
-      return {}
-    }
-  })
-
-  // Persist global defaults to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('recettes_print_defaults', JSON.stringify(globalPrintDefaults))
-    } catch (e) {}
-  }, [globalPrintDefaults])
+  // Global print defaults persisted to localStorage via hook
+  const [globalPrintDefaults, setGlobalPrintDefaults] = useLocalStorage('recettes_print_defaults', {})
 
   const previewRef = useRef()
   const [searchResults, setSearchResults] = useState([])
-  useEffect(() => {
-    // Check if user is logged in (stored in localStorage for session persistence)
-    const stored = localStorage.getItem('recettes_user')
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored)
-        setCurrentUser(parsed)
-        return
-      } catch (e) {
-        console.warn('Failed to parse stored user:', e)
-        localStorage.removeItem('recettes_user')
-      }
-    }
-
-    const curId = localStorage.getItem('recettes_current')
-    if (curId && !currentUser) {
-      // As a fallback we could fetch from the API, but prefer restoring from localStorage
-      // If you want server-backed rehydration, implement GET /api/users/:id on the server.
-      setCurrentUser({ id: parseInt(curId) })
-    }
-  }, []) // Remove currentUser dependency to prevent infinite loop
+  
 
   // Load recipes when user logs in
   useEffect(() => {
-    if (currentUser && !isGuest) {
+    if (auth.currentUser && !auth.isGuest) {
       loadUserRecipes()
     } else {
       setSearchResults([])
       setAllRecipes([])
       setShowProfile(false)
     }
-  }, [currentUser, isGuest]) // Removed loadingRecipes to prevent infinite loop
+  }, [auth.currentUser, auth.isGuest]) // Removed loadingRecipes to prevent infinite loop
 
-  // API functions
-  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3002/api'
-
+  // API functions are provided by useApi() hook (apiLogin, apiRegister, apiCreateRecipe, ...)
   async function loadUserRecipes() {
     if (loadingRecipes) return // Prevent multiple calls
     setLoadingRecipes(true)
     try {
-      const response = await fetch(`${API_BASE}/users/${currentUser.id}/recipes`)
-      if (response.ok) {
-        const recipes = await response.json()
-        // Map snake_case to camelCase
-        const mappedRecipes = recipes.map(r => ({
-          ...r,
-          prepTime: r.prep_time,
-          cookTime: r.cook_time,
-          createdAt: r.created_at,
-          updatedAt: r.updated_at,
-          ingredients: Array.isArray(r.ingredients) ? r.ingredients : [],
-          steps: Array.isArray(r.steps) ? r.steps : [],
-          tags: Array.isArray(r.tags) ? r.tags : []
-        }))
+      const recipes = await apiGetUserRecipes(auth.currentUser.id)
+      // Map snake_case to camelCase
+      const mappedRecipes = recipes.map(r => ({
+        ...r,
+        prepTime: r.prep_time,
+        cookTime: r.cook_time,
+        createdAt: r.created_at,
+        updatedAt: r.updated_at,
+        ingredients: Array.isArray(r.ingredients) ? r.ingredients : [],
+        steps: Array.isArray(r.steps) ? r.steps : [],
+        tags: Array.isArray(r.tags) ? r.tags : []
+      }))
 
-        setUsers([{ ...currentUser, recipes: mappedRecipes }])
-        setAllRecipes(mappedRecipes)
-        setSearchResults(mappedRecipes)
-        setShowProfile(true)
-      }
+      setUsers([{ ...auth.currentUser, recipes: mappedRecipes }])
+      setAllRecipes(mappedRecipes)
+      setSearchResults(mappedRecipes)
+      setShowProfile(true)
     } catch (error) {
       console.error('Failed to load recipes:', error)
     } finally {
       setLoadingRecipes(false)
     }
   }
-
-  async function apiLogin(email, password) {
-    const response = await fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Login failed')
-    }
-
-    return data
-  }
-
-  async function apiRegister(name, email, password) {
-    const response = await fetch(`${API_BASE}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password })
-    })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Registration failed')
-    }
-
-    return data
-  }
-
-  async function apiCreateRecipe(recipe) {
-    const response = await fetch(`${API_BASE}/recipes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(recipe)
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to create recipe')
-    }
-
-    return response.json()
-  }
-
-  async function apiUpdateRecipe(id, recipe) {
-    const response = await fetch(`${API_BASE}/recipes/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(recipe)
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to update recipe')
-    }
-
-    return response.json()
-  }
-
-  async function apiDeleteRecipe(id) {
-    const response = await fetch(`${API_BASE}/recipes/${id}`, {
-      method: 'DELETE'
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to delete recipe')
-    }
-
-    return response.json()
-  }
-
-    async function apiGetUser(id) {
-      const response = await fetch(`${API_BASE}/users/${id}`)
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch user')
-      }
-      return data
-    }
 
   // run search when query changes
   useEffect(() => {
@@ -279,55 +112,18 @@ export default function App() {
     setUsers(next)
   }
 
-  function handleLogin({ email, password }) {
-    apiLogin(email, password)
-      .then(user => {
-        setCurrentUser(user)
-        localStorage.setItem('recettes_current', String(user.id))
-  localStorage.setItem('recettes_user', JSON.stringify(user))
-        setShowAuth(false)
-        setShowProfile(true)
-        setIsGuest(false) // Exit guest mode on login
-      })
-      .catch(error => {
-        toast.error(`Erreur de connexion: ${error.message}`)
-        console.error('Login error:', error)
-      })
-  }
-
-  function handleSignup({ name, email, password }) {
-    apiRegister(name, email, password)
-      .then(user => {
-        setCurrentUser(user)
-        localStorage.setItem('recettes_current', String(user.id))
-  localStorage.setItem('recettes_user', JSON.stringify(user))
-        setShowAuth(false)
-        setShowProfile(true)
-        setIsGuest(false) // Exit guest mode on signup
-      })
-      .catch(error => {
-        toast.error(`Erreur d'inscription: ${error.message}`)
-        console.error('Signup error:', error)
-      })
-  }
-
-  function handleLogout() {
-    setCurrentUser(null)
-    localStorage.removeItem('recettes_current')
-    localStorage.removeItem('recettes_user')
-    setIsGuest(false) // Exit guest mode on logout
-  }
+  
 
   function saveCurrentRecipe() {
-    if (isGuest) {
+    if (auth.isGuest) {
       toast.info('Connectez-vous pour sauvegarder vos recettes')
       return
     }
-    if (!currentUser || !recipe.title.trim()) return
+    if (!auth.currentUser || !recipe.title.trim()) return
 
     const recipeToSave = {
       ...recipe,
-      user_id: currentUser.id,
+      user_id: auth.currentUser.id,
       prep_time: recipe.prepTime,
       cook_time: recipe.cookTime,
       ingredients: recipe.ingredients.filter(ing => ing.trim() !== ''),
@@ -371,7 +167,7 @@ export default function App() {
   }
 
   function deleteRecipe(id) {
-    if (!currentUser) return
+    if (!auth.currentUser) return
     // Find the recipe title for confirmation
     const recipeToDelete = searchResults.find(r => r.id === id)
     if (recipeToDelete) {
@@ -432,17 +228,7 @@ export default function App() {
   }
 
   function openStandaloneRecipe(r) {
-    try {
-      const id = r && r.id ? String(r.id) : `temp_${Date.now()}`
-      sessionStorage.setItem('standaloneRecipe', JSON.stringify(r))
-      if (r && r.id) sessionStorage.setItem(`standaloneRecipe_${id}`, JSON.stringify(r))
-      const params = new URLSearchParams(window.location.search)
-      params.set('view', id)
-      window.history.pushState({}, '', `${window.location.pathname}?${params.toString()}`)
-    } catch (e) {
-      // ignore
-    }
-    setStandaloneRecipe(r)
+    hookOpenStandaloneRecipe(r)
     setShowProfile(false)
   }
 
@@ -532,335 +318,47 @@ export default function App() {
       '--accent': themes[theme].accent,
       '--accent-light': themes[theme].light
     }}>
-      {!currentUser && !isGuest ? (
-        <main style={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 88px)'}}>
-          <div style={{textAlign: 'center', maxWidth: '400px', padding: '20px'}}>
-            <h1 style={{fontSize: '2.5rem', marginBottom: '1rem', color: 'var(--accent)'}}>📝 Créateur de Recettes</h1>
-            <p style={{marginBottom: '2rem', color: '#666', fontSize: '1.1rem'}}>
-              Créez, sauvegardez et partagez vos meilleures recettes
-            </p>
-            
-            <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
-              <button 
-                className="btn btn-primary" 
-                style={{padding: '12px 24px', fontSize: '1.1rem'}}
-                onClick={() => setShowAuth(true)}
-              >
-                🔐 Se connecter / S'inscrire
-              </button>
-              
-              <button 
-                className="btn btn-secondary" 
-                style={{padding: '12px 24px', fontSize: '1.1rem'}}
-                onClick={() => {
-                  setIsGuest(true)
-                  setRecipe({ title: '', subtitle: '', servings: '', prepTime: '', cookTime: '', ingredients: [], steps: [], image: null, tags: [], createdAt: null, updatedAt: null })
-                }}
-              >
-                🚀 Utiliser sans compte
-              </button>
-            </div>
-            
-            <p style={{marginTop: '2rem', fontSize: '0.9rem', color: '#888'}}>
-              En mode invité, vos recettes ne seront pas sauvegardées
-            </p>
-          </div>
-          
-          {showAuth && (
-            <div style={{position:'fixed',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.3)'}}>
-              <Auth onLogin={handleLogin} onSignup={handleSignup} onClose={() => setShowAuth(false)} />
-            </div>
-          )}
-        </main>
-      ) : (
-        <>
-          <header className="app-header">
-            {showProfile && <h1>📝 Créateur de Recettes</h1>}
-            {!showProfile && (
-              <div className="edit-header">
-                <button className="btn btn-ghost" onClick={() => {
-                  // If viewing standalone recipe, close it first and clean URL/storage
-                  if (standaloneRecipe) {
-                    try {
-                      const params = new URLSearchParams(window.location.search)
-                      params.delete('view')
-                      const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname
-                      window.history.replaceState({}, '', newUrl)
-                      sessionStorage.removeItem('standaloneRecipe')
-                      if (standaloneRecipe && standaloneRecipe.id) sessionStorage.removeItem(`standaloneRecipe_${standaloneRecipe.id}`)
-                    } catch (e) {
-                      // ignore
-                    }
-                    setStandaloneRecipe(null)
-                    setShowProfile(true)
-                    return
-                  }
-                  if (hasUnsavedChanges()) {
-                    setShowBackConfirm(true)
-                  } else {
-                    if (isGuest) {
-                      setIsGuest(false)
-                    } else {
-                      setShowProfile(true)
-                    }
-                  }
-                }} title={isGuest ? "Retour à l'accueil" : "Retour à la collection"}>
-                  ← Retour
-                </button>
-                {/* When showing a standalone recipe, hide header controls for a minimal read-only view */}
-                {!standaloneRecipe && (
-                  <div className="edit-controls">
-                    <div className="theme-picker">
-                      <label style={{fontSize: '15px', marginRight: '8px', fontWeight: '600'}}>🎨 Couleur:</label>
-                      <select value={theme} onChange={(e) => setTheme(e.target.value)} className="theme-select">
-                        <option value="orange">🧡 Orange</option>
-                        <option value="blue">💙 Bleu</option>
-                        <option value="green">💚 Vert</option>
-                        <option value="purple">💜 Violet</option>
-                        <option value="pink">💗 Rose</option>
-                      </select>
-                    </div>
-                    <button className="btn" onClick={() => setShowHelp((s) => !s)} title="Afficher / Masquer l'aide">
-                      💡 {showHelp ? 'Masquer' : 'Aide'}
-                    </button>
-                    <button className="btn" onClick={() => printRecipe()} title="Ouvrir la boîte d'impression">🖨️ Imprimer</button>
-                    <button className="btn" onClick={downloadPdf} title="Télécharger en PDF">📥 Télécharger PDF</button>
-                    <button 
-                      className="btn btn-primary" 
-                      data-tutorial="save"
-                      onClick={saveCurrentRecipe} 
-                      title={isGuest ? "Connectez-vous pour sauvegarder" : "Enregistrer la recette"}
-                      disabled={isGuest}
-                    >
-                      💾 {isGuest ? 'Connexion requise' : 'Enregistrer'}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-            {showProfile && (
-              <>
-                <div className="header-search-row" style={{display:'flex',alignItems:'center',gap:12}}>
-                  <SearchBar value={searchQuery} onChange={setSearchQuery} />
-                </div>
-                <div className="buttons">
-                  {/* {currentUser && !isGuest && (
-                    <div className="header-user">Bonjour, {currentUser.name}</div>
-                  )} */}
-                  <div className="theme-picker">
-                    <label style={{fontSize: '15px', marginRight: '8px', fontWeight: '600'}}>🎨 Couleur:</label>
-                    <select value={theme} onChange={(e) => setTheme(e.target.value)} className="theme-select">
-                      <option value="orange">🧡 Orange</option>
-                      <option value="blue">💙 Bleu</option>
-                      <option value="green">💚 Vert</option>
-                      <option value="purple">💜 Violet</option>
-                      <option value="pink">💗 Rose</option>
-                    </select>
-                  </div>
-                  {currentUser && !isGuest ? (
-                    <>
-                      <button className="btn" onClick={handleLogout}>Se déconnecter</button>
-                    </>
-                  ) : (
-                    <button className="btn" onClick={() => setShowAuth(true)}>Se connecter</button>
-                  )}
-                </div>
-              </>
-            )}
-          </header>
+      <AuthGate
+        auth={auth}
+        showProfile={showProfile}
+        setShowProfile={setShowProfile}
+        standaloneRecipe={standaloneRecipe}
+        showHelp={showHelp}
+        setShowHelp={setShowHelp}
+        theme={theme}
+        themeObj={themes[theme]}
+        setTheme={setTheme}
+        printRecipe={printRecipe}
+        downloadPdf={downloadPdf}
+        saveCurrentRecipe={saveCurrentRecipe}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        previewRef={previewRef}
+        createNew={createNew}
+        loadRecipe={loadRecipe}
+        deleteRecipe={deleteRecipe}
+        searchResults={searchResults}
+        onUpdateUser={(u) => { const next = users.map((x) => x.id === u.id ? u : x); persistUsers(next); auth.setCurrentUser(u) }}
+        handleChange={handleChange}
+        recipe={recipe}
+        globalPrintDefaults={globalPrintDefaults}
+        setGlobalPrintDefaults={setGlobalPrintDefaults}
+        openStandaloneRecipe={openStandaloneRecipe}
+        setStandaloneRecipe={setStandaloneRecipe}
+        setUsers={setUsers}
+        setRecipe={setRecipe}
+      />
 
-          {/* Mobile search - full width below header */}
-          {showProfile && (
-            <div className="mobile-search">
-              <SearchBar value={searchQuery} onChange={setSearchQuery} />
-            </div>
-          )}
-
-          {standaloneRecipe ? (
-            <main className="standalone-recipe">
-              <section style={{ width: '100%' }}>
-                <RecipePage recipe={standaloneRecipe} />
-              </section>
-            </main>
-          ) : (
-            <main className={showProfile ? "full-profile" : "split"}>
-              <section className="left" style={showProfile ? { width: '100%' } : {}}>
-                {showProfile && !isGuest ? (
-                  <Profile
-                    user={currentUser}
-                    searchResults={searchResults}
-                    searchQuery={searchQuery}
-                    onLogout={handleLogout}
-                    onLoadRecipe={loadRecipe}
-                    onDeleteRecipe={deleteRecipe}
-                    onCreateNew={createNew}
-                    onPrintRecipe={printRecipe}
-                    onSaveRecipe={saveCurrentRecipe}
-                    onUpdateUser={(u) => { const next = users.map((x) => x.id === u.id ? u : x); persistUsers(next); setCurrentUser(u) }}
-                    onViewRecipe={(r) => {
-                      try {
-                        const id = r && r.id ? String(r.id) : `temp_${Date.now()}`
-                        sessionStorage.setItem('standaloneRecipe', JSON.stringify(r))
-                        sessionStorage.setItem(`standaloneRecipe_${id}`, JSON.stringify(r))
-                        const params = new URLSearchParams(window.location.search)
-                        params.set('view', id)
-                        window.history.pushState({}, '', `${window.location.pathname}?${params.toString()}`)
-                      } catch (e) {
-                        // ignore storage errors
-                      }
-                      setStandaloneRecipe(r)
-                      setShowProfile(false)
-                    }}
-                  />
-                ) : (
-                  <>
-                    {showHelp && (
-                      <Tutorial onClose={() => setShowHelp(false)} />
-                    )}
-                    <RecipeEditor
-                      recipe={recipe}
-                      onChange={handleChange}
-                      globalPrintDefaults={globalPrintDefaults}
-                      setGlobalPrintDefaults={setGlobalPrintDefaults}
-                      onViewRecipe={openStandaloneRecipe}
-                    />
-                  </>
-                )}
-              </section>
-              {!showProfile && (
-                <section className="right">
-                      {/* Apply CSS variables from recipe.print so live preview and print-mode can read them */}
-                  <div
-                    ref={previewRef}
-                    data-tutorial="preview"
-                    className="preview-wrapper"
-                    style={{
-                      // Use recipe.print if present, otherwise fall back to globalPrintDefaults
-                      ...( (() => {
-                        const merged = recipe.print || globalPrintDefaults || {}
-                        const unit = merged.marginUnit || 'mm'
-                        const title = merged.titleFontSize != null ? `${merged.titleFontSize}px` : undefined
-                        const subtitle = merged.subtitleFontSize != null ? `${merged.subtitleFontSize}px` : undefined
-                        const body = merged.bodyFontSize != null ? `${merged.bodyFontSize}px` : undefined
-                        const categories = merged.categoriesFontSize != null ? `${merged.categoriesFontSize}px` : undefined
-                        const meta = merged.metaFontSize != null ? `${merged.metaFontSize}px` : undefined
-                        const ingTitle = merged.ingredientsTitleFontSize != null ? `${merged.ingredientsTitleFontSize}px` : undefined
-                        const ingBodyVal = merged.ingredientsBodyFontSize != null ? merged.ingredientsBodyFontSize : merged.ingredientsFontSize
-                        const ingBody = ingBodyVal != null ? `${ingBodyVal}px` : undefined
-                        const stepTitle = merged.stepsTitleFontSize != null ? `${merged.stepsTitleFontSize}px` : undefined
-                        const stepBodyVal = merged.stepsBodyFontSize != null ? merged.stepsBodyFontSize : merged.stepsFontSize
-                        const stepBody = stepBodyVal != null ? `${stepBodyVal}px` : undefined
-                        const stepNumber = merged.stepNumberFontSize != null ? `${merged.stepNumberFontSize}px` : undefined
-
-                        return {
-                          '--print-title-font-size': title,
-                          '--print-subtitle-font-size': subtitle,
-                          '--print-body-font-size': body,
-                          '--print-categories-font-size': categories,
-                          '--print-meta-font-size': meta,
-                          '--print-ingredients-title-font-size': ingTitle,
-                          '--print-ingredients-font-size': ingBody,
-                          '--print-steps-title-font-size': stepTitle,
-                          '--print-steps-font-size': stepBody,
-                          '--print-step-number-font-size': stepNumber,
-                          '--accent': themes[theme].accent,
-                          '--accent-light': themes[theme].light,
-                          '--print-margin-top': (merged.marginTop != null ? String(merged.marginTop) + unit : undefined),
-                          '--print-margin-bottom': (merged.marginBottom != null ? String(merged.marginBottom) + unit : undefined),
-                          '--print-margin-left': (merged.marginLeft != null ? String(merged.marginLeft) + unit : undefined),
-                          '--print-margin-right': (merged.marginRight != null ? String(merged.marginRight) + unit : undefined)
-                        }
-                      })() )
-                    }}
-                  >
-                    <RecipePreview recipe={recipe} globalPrintDefaults={globalPrintDefaults} />
-                  </div>
-                </section>
-              )}
-            </main>
-          )}
-        </>
-      )}
-      {showAuth && (
-        <div style={{position:'fixed',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.3)'}}>
-          <Auth onLogin={handleLogin} onSignup={handleSignup} onClose={() => setShowAuth(false)} />
-        </div>
-      )}
-      {showBackConfirm && (
-        <div style={{position:'fixed',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.3)',zIndex:1000}}>
-          <div style={{background:'white',padding:'20px',borderRadius:'8px',maxWidth:'400px',width:'90%'}}>
-            <h3 style={{margin:'0 0 16px 0',color:'#333'}}>Modifications non sauvegardées</h3>
-            <p style={{margin:'0 0 20px 0',color:'#666'}}>
-              Vous avez des modifications non sauvegardées. Que souhaitez-vous faire ?
-            </p>
-            <div style={{display:'flex',gap:'12px',justifyContent:'flex-end',flexWrap:'wrap'}}>
-              <button 
-                onClick={() => setShowBackConfirm(false)}
-                style={{padding:'8px 16px',border:'1px solid #ddd',borderRadius:'4px',background:'white',cursor:'pointer'}}
-              >
-                Annuler
-              </button>
-              <button 
-                onClick={() => {
-                  setShowBackConfirm(false)
-                  if (isGuest) {
-                    setIsGuest(false)
-                  } else {
-                    setShowProfile(true)
-                  }
-                }}
-                style={{padding:'8px 16px',border:'1px solid #ddd',borderRadius:'4px',background:'white',cursor:'pointer'}}
-              >
-                Abandonner les modifications
-              </button>
-              <button 
-                onClick={() => {
-                  setShowBackConfirm(false)
-                  saveCurrentRecipe()
-                  // After saving, navigate back
-                  setTimeout(() => {
-                    if (isGuest) {
-                      setIsGuest(false)
-                    } else {
-                      setShowProfile(true)
-                    }
-                  }, 100)
-                }}
-                style={{padding:'8px 16px',border:'none',borderRadius:'4px',background:'var(--accent)',color:'white',cursor:'pointer'}}
-              >
-                Sauvegarder et quitter
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {deleteConfirm && (
-        <div style={{position:'fixed',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.3)',zIndex:1000}}>
-          <div style={{background:'white',padding:'20px',borderRadius:'8px',maxWidth:'400px',width:'90%'}}>
-            <h3 style={{margin:'0 0 16px 0',color:'#333'}}>Confirmer la suppression</h3>
-            <p style={{margin:'0 0 20px 0',color:'#666'}}>
-              Êtes-vous sûr de vouloir supprimer la recette "<strong>{deleteConfirm.title}</strong>" ?
-              <br />
-              Cette action est irréversible.
-            </p>
-            <div style={{display:'flex',gap:'12px',justifyContent:'flex-end'}}>
-              <button 
-                onClick={() => setDeleteConfirm(null)}
-                style={{padding:'8px 16px',border:'1px solid #ddd',borderRadius:'4px',background:'white',cursor:'pointer'}}
-              >
-                Annuler
-              </button>
-              <button 
-                onClick={confirmDelete}
-                style={{padding:'8px 16px',border:'none',borderRadius:'4px',background:'#dc3545',color:'white',cursor:'pointer'}}
-              >
-                Supprimer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      <Toaster position="bottom-right" />
+      <AppModals
+        auth={auth}
+        showBackConfirm={showBackConfirm}
+        setShowBackConfirm={setShowBackConfirm}
+        deleteConfirm={deleteConfirm}
+        setDeleteConfirm={setDeleteConfirm}
+        saveCurrentRecipe={saveCurrentRecipe}
+        setShowProfile={setShowProfile}
+        confirmDelete={confirmDelete}
+      />
     </div>
   )
 }

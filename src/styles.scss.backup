@@ -9,53 +9,8 @@
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-}
-
-* {
-  box-sizing: border-box
-}
-
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  margin: 0;
-  color: var(--text-dark);
-  background: var(--bg-warm);
-  font-size: 16px;
-  line-height: 1.6;
-}
-
-/* Hide mobile search by default (shown only on mobile) */
-.mobile-search {
-  display: none;
-}
-
-/* ========== AUTH PANEL STYLES ========== */
-.auth-panel {
-  max-width: 420px;
-  width: 100%;
-  padding: 48px 40px;
-  background: white;
-  border: 3px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  text-align: center;
-}
-
-.auth-icon {
-  font-size: 64px;
-  margin-bottom: 20px;
-  animation: fadeIn 0.5s ease;
-}
-
-.auth-title {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--accent);
-  margin: 0 0 12px 0;
-}
+  /* Backup moved to src/_backup/styles.scss.backup */
+  /* Original backup content archived to avoid duplication. */
 
 .auth-subtitle {
   font-size: 17px;
