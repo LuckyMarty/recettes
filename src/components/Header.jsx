@@ -4,6 +4,7 @@ export default function Header(props) {
   const {
     showProfile,
     standaloneRecipe,
+    setStandaloneRecipe,
     theme,
     setTheme,
     showHelp,
@@ -36,6 +37,7 @@ export default function Header(props) {
               } catch (e) {
                 // ignore
               }
+              if (typeof setStandaloneRecipe === 'function') setStandaloneRecipe(null)
               setShowProfile(true)
               return
             }

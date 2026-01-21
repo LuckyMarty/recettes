@@ -42,6 +42,7 @@ export default function MainWorkspace(props) {
       <Header
         showProfile={showProfile}
         standaloneRecipe={standaloneRecipe}
+        setStandaloneRecipe={setStandaloneRecipe}
         theme={theme}
         setTheme={setTheme}
         showHelp={showHelp}
